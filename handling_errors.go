@@ -1,37 +1,34 @@
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+var ErrXYZFailed = errors.New("ups, XYZ failed")   // 定義全局錯誤
+var ErrXYZFailed2 = errors.New("ups, XYZ2 failed") // 定義全局錯誤
+
 func noErrCanHappen() int {
 	return 204
 }
 
-func doOnErr() error {
-	if shouldFail(){
-		return error.New("ups, XYZ faild")
+func doOnErr(shouldFail func() bool) error {
+	if shouldFail() {
+		return ErrXYZFailed
 	}
 	return nil
 }
 
-func intOrErr() (int, error) {
-	if shouldFail(){
-		return error.New("ups, XYZ2 faild")
-	} 
+func intOrErr(shouldFail func() bool) (int, error) {
+	if shouldFail() {
+		return 0, ErrXYZFailed2
+	}
 	return noErrCanHappen(), nil
 }
 
-func nestedDoOrErr() error {
-	if err := doOnErr(); err != nil {
-		return errors.Wrap(err, "od")
+func nestedDoOrErr(shouldFail func() bool) error {
+	if err := doOnErr(shouldFail); err != nil {
+		return fmt.Errorf("od: %w", err)
 	}
 	return nil
-}
-
-func main(){
-	ret := noErrCanHappen()
-	if err := nestedDoOrErr(); err != nil {
-		// handle error
-	}
-	ret2, err := intOrErr()
-	if err != intOrErr()
-	if err != nil {
-		// handle error
-	}
-	// ......
 }
