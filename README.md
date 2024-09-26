@@ -1,2 +1,6 @@
 # Golang start from scratch
-push test
+
+# Git common commands
+git add .
+git commit -m "Init"
+git push -u origin main
