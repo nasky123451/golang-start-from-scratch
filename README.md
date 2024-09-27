@@ -11,7 +11,7 @@ cd websocket
 ```  
 go run websocket_server.go   
 ```  
-or
+Or
 ``` 
 go run websocket_server.go -monitor 
 ``` 
@@ -26,6 +26,8 @@ go run websocket_clients.go
 ```   
 
 # Git common commands
+``` 
 git add .   
 git commit -m "Init"   
 git push -u origin main   
+``` 
