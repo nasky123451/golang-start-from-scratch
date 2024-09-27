@@ -2,10 +2,12 @@
 
 # Websocket Unit
 
+1. Go to folder
+
 ```   
 cd websocket  
 ```   
-Open Websocket Server (8080Port)   
+2. Open Websocket Server (8080Port)  
 ```  
 go run websocket_server.go   
 ```  
@@ -13,11 +15,12 @@ or
 ``` 
 go run websocket_server.go -monitor 
 ``` 
-Open Websocket Single Client Test 
+3. Open Websocket Client Test
+Single Client Test 
 ``` 
 go run websocket_client.go  
 ```   
-Open Websocket Client Brute force test   
+Or Brute force test   
 ```   
 go run websocket_clients.go   
 ```   
