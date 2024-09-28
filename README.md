@@ -1,5 +1,7 @@
 # Golang start from scratch  
 
+If you want to use air, please make sure your go version >=1.23   
+
 # Websocket Unit
 
 1. Go to folder
@@ -31,3 +33,11 @@ git add .
 git commit -m "Init"   
 git push -u origin main   
 ``` 
+
+# Docker common commands
+```   
+docker build -t go-docker:latest .   
+docker images 
+docker run -it go-docker:latest air init  
+docker run -p 8080:8080 go-docker:latest   
+```   
