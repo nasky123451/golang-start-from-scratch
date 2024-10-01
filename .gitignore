@@ -1,9 +1,10 @@
+*.exe
+*.out
+*.bin
 *.o
 *.a
 *.so
-*.test
-*.prof
-*.out
+*.dll
 
 vendor/
 tmp/
