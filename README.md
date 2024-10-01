@@ -38,6 +38,8 @@ git push -u origin main
 ```   
 docker build -t go-docker:latest .   
 docker images 
-docker run -it go-docker:latest air init  
-docker run -p 8080:8080 go-docker:latest   
+docker run -p 8080:8080 go-docker:latest  
+# or   
+docker run -p 8080:8080 --rm -v ${PWD}:/app -v /app/tmp --name go-docker-air go-docker
+
 ```   
