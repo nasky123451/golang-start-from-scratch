@@ -38,8 +38,8 @@ func producer(id int, tasks chan<- Task, stop <-chan struct{}) {
 
 // Consumer function processes tasks received from the channel
 func consumer(id int, tasks <-chan Task, results chan<- string, wg *sync.WaitGroup) {
-	defer wg.Done()           // Indicate that this goroutine is done when it returns
-	for task := range tasks { // Read from the channel until it's closed
+	defer wg.Done()
+	for task := range tasks {
 		go processTask(task, id, results)
 	}
 }
@@ -78,20 +78,16 @@ func main() {
 
 	// Stop task production after 3 seconds
 	go func() {
-		time.Sleep(3 * time.Second) // Wait for 3 seconds
-		close(stop)                 // Close the stop channel
-	}()
-
-	// Close the tasks channel when all tasks are processed
-	go func() {
-		wg.Wait()    // Wait for all consumers to finish
+		time.Sleep(10 * time.Second)
+		close(stop)  // Close the stop channel
 		close(tasks) // Close tasks channel after all consumers finish
 	}()
 
 	// Close the results channel when all tasks are processed
 	go func() {
-		wg.Wait()      // Wait for all consumers to finish
-		close(results) // Close results channel after all tasks are processed
+		wg.Wait()                   // Wait for all consumers to finish
+		time.Sleep(3 * time.Second) // Wait for 3 seconds
+		close(results)              // Close results channel after all tasks are processed
 	}()
 
 	// Print results as they come in
