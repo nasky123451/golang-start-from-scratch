@@ -33,14 +33,14 @@ go run websocket_client.go
 go run websocket_clients.go   
 ```   
 
-#### Tracing-Jeager Unit
+#### Tracing-Jaeger Unit
 
 1. Go to folder
 
 ```   
 cd tracing  
 ```   
-2. Run Jeager Server (16686Port)  
+2. Run Jaeger Server (16686Port)  
 
 ```   
 docker run -d --name jaeger `
@@ -74,7 +74,7 @@ docker rm jaeger
 
 http://localhost:16686/   
 
-4. Stop Jeager Server (16686Port)  
+4. Stop Jaeger Server (16686Port)  
 
 ```   
 docker stop jaeger
