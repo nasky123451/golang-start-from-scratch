@@ -19,7 +19,7 @@ cd websocket
 ```  
 go run websocket_server.go   
 ```  
-Or
+##### Or
 ``` 
 go run websocket_server.go -monitor 
 ``` 
@@ -28,7 +28,7 @@ Single Client Test
 ``` 
 go run websocket_client.go  
 ```   
-Or Brute force test   
+##### Or Brute force test   
 ```   
 go run websocket_clients.go   
 ```   
@@ -56,14 +56,14 @@ docker run -d --name jaeger `
   jaegertracing/all-in-one:1.32
 ``` 
 
-If you encounter
+##### If you encounter
 
 ```   
 docker: Error response from daemon: Conflict. The container name "/jaeger" is already in use by container "7e4c51a680ae4d5098fbc1b87d070229bceb459219feb7bc56eb2edce5f6d4d7". You have to remove (or rename) that container to be able to reuse that name.
 See 'docker run --help'.
 ```   
 
-Please run
+##### Please run
 
 ```   
 docker stop jaeger
