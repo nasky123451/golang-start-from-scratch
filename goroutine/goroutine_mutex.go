@@ -1,4 +1,4 @@
-package main
+package goroutine
 
 import (
 	"fmt"
@@ -41,7 +41,7 @@ func (account *BankAccount) DisplayBalance() int64 {
 	return account.balance
 }
 
-func main() {
+func GoroutineMutex() {
 	rand.Seed(time.Now().UnixNano())        // Set seed for random number generator
 	account := &BankAccount{balance: 10000} // Initial balance of 10000
 	var wg sync.WaitGroup

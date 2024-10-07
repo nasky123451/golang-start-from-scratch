@@ -1,7 +1,6 @@
-package main
+package websocket
 
 import (
-	"flag"
 	"log"
 	"math/rand"
 	"net/http"
@@ -159,13 +158,7 @@ func bToMb(b uint64) uint64 {
 	return b / 1024 / 1024
 }
 
-func main() {
-	// Define a flag to enable/disable resource monitoring
-	enableMonitoring := flag.Bool("monitor", false, "Enable resource monitoring")
-
-	// Parse command-line flags
-	flag.Parse()
-
+func WebsocketServer(enableMonitoring *bool) {
 	hub := newHub()
 	go hub.run()
 

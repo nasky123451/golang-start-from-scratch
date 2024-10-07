@@ -1,4 +1,4 @@
-package main
+package goroutine
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type Product struct {
 	Stock int64
 }
 
-func main() {
+func GoroutineBase() {
 	product := &Product{ID: 1, Stock: 10}
 	var wg sync.WaitGroup
 

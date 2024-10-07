@@ -1,4 +1,4 @@
-package main
+package websocket
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func main() {
+func WebsocketClient() {
 	// 连接 WebSocket 服务器的 URL
 	u := url.URL{Scheme: "ws", Host: "localhost:8080", Path: "/ws"}
 	fmt.Printf("Connecting to %s...\n", u.String())

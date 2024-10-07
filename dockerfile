@@ -14,4 +14,5 @@ COPY . .
 
 EXPOSE 8080
 
-CMD [ "air", "-c", ".air.toml" ]
+# ENTRYPOINT [ "air", "-c", ".air.toml" ]
+ENTRYPOINT [ "go", "run", "./main.go" ]

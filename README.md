@@ -2,48 +2,80 @@
 
 If you want to use air, please make sure your go version >=1.23   
 
+You need to set up a Docker network so that your application and Zipkin and Jaeger containers can communicate with each other.
+```  
+docker network create my-network
+```  
+
 ## 目录
   - [單元](#單元)
   - [指令](#指令)
 
 ### 單元
 
+You can use -help to query tags
+``` 
+docker run --rm --name go-docker go-docker:latest -help  
+``` 
+#### Goroutine Unit
+
+##### Goroutine
+
+``` 
+docker run --rm --name go-docker go-docker:latest -goroutine
+```
+
+##### Goroutine Mutex
+
+``` 
+docker run --rm --name go-docker go-docker:latest -goroutineMutex
+```
+
+##### Goroutine Channel
+
+``` 
+docker run --rm --name go-docker go-docker:latest -goroutineChannel
+```
+
 #### Websocket Unit
 
-1. Go to folder
+##### Server (8080 Port)
 
 ```   
-cd websocket  
-```   
-2. Open Websocket Server (8080Port)  
-```  
-go run websocket_server.go   
-```  
-##### Or
+go run .\main.go -websocketServer
+# or   
+go run .\main.go -websocketServer -monitor
+# or   
+docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer
+# or   
+docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer -monitor
 ``` 
-go run websocket_server.go -monitor 
+
+##### Client
+
+```   
+go run .\main.go -websocketClient
+# or   
+docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClient
 ``` 
-3. Open Websocket Client Test
-Single Client Test 
+
+##### Clients
+
+```   
+go run .\main.go -websocketClients
+# or   
+docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClients
 ``` 
-go run websocket_client.go  
-```   
-##### Or Brute force test   
-```   
-go run websocket_clients.go   
-```   
 
-#### Tracing-Jaeger Unit
+#### Tracing Unit
 
-1. Go to folder
+##### Jaeger
+
+1. Run Jaeger Server (16686Port)  
 
 ```   
-cd tracing  
-```   
-2. Run Jaeger Server (16686Port)  
-
-```   
-docker run -d --name jaeger `
+docker run -d --rm --name jaeger `
+  --network my-network `
   -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 `
   -p 5775:5775/udp `
   -p 6831:6831/udp `
@@ -54,50 +86,34 @@ docker run -d --name jaeger `
   -p 14250:14250 `
   -p 9411:9411 `
   jaegertracing/all-in-one:1.32
+
+docker run --rm --name go-docker --network my-network go-docker:latest -tracingJeager
 ``` 
 
-##### If you encounter
-
-```   
-docker: Error response from daemon: Conflict. The container name "/jaeger" is already in use by container "7e4c51a680ae4d5098fbc1b87d070229bceb459219feb7bc56eb2edce5f6d4d7". You have to remove (or rename) that container to be able to reuse that name.
-See 'docker run --help'.
-```   
-
-##### Please run
-
-```   
-docker stop jaeger
-docker rm jaeger
-``` 
-
-3. Go to browser
+2. Go to browser
 
 http://localhost:16686/   
 
-4. Stop Jaeger Server (16686Port)  
+3. Stop Jaeger Server (16686Port)  
 
 ```   
 docker stop jaeger
 ``` 
 
-#### Tracing-Zipkin Unit
+##### Zipkin
 
-1. Go to folder
-
-```   
-cd tracing  
-```   
-2. Run Zipkin Server (9412Port)  
+1. Run Zipkin Server (9412Port)  
 
 ```   
-docker run -d --name zipkin -p 9412:9411 openzipkin/zipkin
+docker run -d --rm --name zipkin --network my-network -p 9412:9411 openzipkin/zipkin
+docker run --rm --name go-docker --network my-network go-docker:latest -tracingZipkin
 ``` 
 
-3. Go to browser
+2. Go to browser
 
 http://localhost:9412/   
 
-4. Stop Zipkin Server (9412Port)  
+3. Stop Zipkin Server (9412Port)  
 
 ```   
 docker stop zipkin
@@ -116,8 +132,25 @@ git push -u origin main
 ```   
 docker build -t go-docker:latest .   
 docker images 
-docker run -p 8080:8080 go-docker:latest  
+docker run --rm --name go-docker -p 8080:8080 go-docker:latest  
 # or   
-docker run -p 8080:8080 --rm -v ${PWD}:/app -v /app/tmp --name go-docker-air go-docker
+docker run --rm --name go-docker -p 8080:8080 -v ${PWD}:/app -v /app/tmp --name go-docker-air go-docker
 
 ```   
+#### Docker stop commands
+```   
+docker ps
+docker stop go-docker
+```   
+
+##### If you encounter   
+
+##### docker: Error response from daemon: Conflict. The container name "/xxxxxxxx" is already in use by container "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx". You have to remove (or rename) that container to be able to reuse that name.
+##### See 'docker run --help'.
+
+##### Please run
+
+```   
+docker stop xxxxxxxx
+docker rm xxxxxxxx
+``` 

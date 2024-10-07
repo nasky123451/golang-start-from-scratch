@@ -1,4 +1,4 @@
-package main
+package tracing
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
-func initTracer(endpoint string) (func(), error) {
+func initZipkinTracer(endpoint string) (func(), error) {
 	log.Printf("Initializing tracer with Zipkin endpoint: %s", endpoint)
 
 	// 初始化 Zipkin 導出器
@@ -49,16 +49,11 @@ func initTracer(endpoint string) (func(), error) {
 	}, nil
 }
 
-func doOperationWithCtx(ctx context.Context) error {
-	// 模擬操作
-	time.Sleep(100 * time.Millisecond)
-	return nil
-}
-
-func main() {
+func TracingZipkin() {
 	// Zipkin 的端點
-	endpoint := "http://localhost:9412/api/v2/spans"
-	shutdown, err := initTracer(endpoint)
+	// endpoint := "http://localhost:9411/api/v2/spans"
+	endpoint := "http://zipkin:9411/api/v2/spans"
+	shutdown, err := initZipkinTracer(endpoint)
 	if err != nil {
 		log.Fatalf("初始化追踪器失敗: %v", err)
 	}

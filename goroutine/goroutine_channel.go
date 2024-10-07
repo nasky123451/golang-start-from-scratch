@@ -1,4 +1,4 @@
-package main
+package goroutine
 
 import (
 	"fmt"
@@ -53,7 +53,7 @@ func processTask(task Task, consumerID int, results chan<- string) {
 	results <- fmt.Sprintf("%s - %s", currentTime, result) // Include time in results
 }
 
-func main() {
+func GoroutineChannel() {
 	rand.Seed(time.Now().UnixNano()) // Seed random number generator
 	tasks := make(chan Task, 10)     // Buffered channel for tasks
 	results := make(chan string)     // Buffered channel for results

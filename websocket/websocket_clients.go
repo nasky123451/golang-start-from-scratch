@@ -1,4 +1,4 @@
-package main
+package websocket
 
 import (
 	"fmt"
@@ -103,7 +103,7 @@ func (c *TestClient) sendMessages(wg *sync.WaitGroup) {
 	heartbeatWg.Wait()
 }
 
-func main() {
+func WebsocketClients() {
 	// Number of clients to simulate
 	numClients := 1000 // You can change this to a higher number for more load
 
