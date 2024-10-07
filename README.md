@@ -13,7 +13,7 @@ This project is a large collection of developers' test applications for various 
   - [指令](#指令)
     - [Git](#Git)
     - [Docker](#Docker)
-
+  - [常見問題](#常見問題)
 
 ## 開發者的配置
 
@@ -129,7 +129,7 @@ go run .\main.go -websocketServer -monitor
 # Run using docker  
 docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer
 
-# Run using docker and  using monitor 
+# Run using docker and using monitor 
 docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer -monitor
 ``` 
 
