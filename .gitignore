@@ -8,6 +8,7 @@
 
 vendor/
 tmp/
+data/
 
 # IDE specific files
 .vscode
