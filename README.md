@@ -132,9 +132,9 @@ git push -u origin main
 ```   
 docker build -t go-docker:latest .   
 docker images 
-docker run --rm --name go-docker -p 8080:8080 go-docker:latest  
+docker run --rm --name go-docker go-docker:latest  
 # or   
-docker run --rm --name go-docker -p 8080:8080 -v ${PWD}:/app -v /app/tmp --name go-docker-air go-docker
+docker run --rm --name go-docker -v ${PWD}:/app -v /app/tmp --name go-docker-air go-docker
 
 ```   
 #### Docker stop commands
@@ -143,7 +143,7 @@ docker ps
 docker stop go-docker
 ```   
 
-##### If you encounter   
+#### If you encounter   
 
 ##### docker: Error response from daemon: Conflict. The container name "/xxxxxxxx" is already in use by container "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx". You have to remove (or rename) that container to be able to reuse that name.
 ##### See 'docker run --help'.

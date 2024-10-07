@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	// 定義標誌
+	// Define flags
 	flags := map[string]*bool{
 		"websocketServer":  flag.Bool("websocketServer", false, "Enable resource websocket server"),
 		"websocketClients": flag.Bool("websocketClients", false, "Enable resource websocket clients"),
@@ -24,16 +24,16 @@ func main() {
 		"help":             flag.Bool("help", false, "Display help information"),
 	}
 
-	// 解析命令行標誌
+	// Parse command line flags
 	flag.Parse()
 
-	// 檢查是否需要顯示幫助信息
+	// Check if help information needs to be displayed
 	if *flags["help"] {
 		displayHelp()
 		return
 	}
 
-	// 檢查啟用的標誌
+	// Check enabled flags
 	enabledCount := 0
 	for _, enabled := range flags {
 		if *enabled {
@@ -41,13 +41,13 @@ func main() {
 		}
 	}
 
-	// 檢查是否有超過一個標誌被啟用
+	// Check if more than one flag is enabled
 	if enabledCount > 1 {
 		fmt.Println("Error: Only one option can be enabled at a time. Please refer to -help for more information.")
 		return
 	}
 
-	// 根據啟用的標誌啟動相應的功能
+	// Start corresponding functionality based on enabled flags
 	switch {
 	case *flags["websocketServer"]:
 		ws.WebsocketServer(flags["monitor"])
@@ -66,7 +66,7 @@ func main() {
 	case *flags["tracingZipkin"]:
 		tracing.TracingZipkin()
 	default:
-		// 如果沒有任何標誌被啟用，則顯示錯誤消息
+		// Display error message if no flags are enabled
 		fmt.Println("Error: At least one option must be enabled. Please refer to -help for more information.")
 	}
 }
@@ -81,7 +81,7 @@ func displayHelp() {
 	fmt.Println("  -goroutine         Enable goroutine")
 	fmt.Println("  -goroutineMutex    Enable goroutine mutex")
 	fmt.Println("  -goroutineChannel  Enable goroutine channel")
-	fmt.Println("  -tracingJeager  Enable tracing jeager to use 16686 port")
-	fmt.Println("  -tracingZipkin  Enable tracing zipkin to use 9412 port")
+	fmt.Println("  -tracingJeager     Enable tracing jeager to use 16686 port")
+	fmt.Println("  -tracingZipkin     Enable tracing zipkin to use 9412 port")
 	fmt.Println("  -help              Display help information")
 }
