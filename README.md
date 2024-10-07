@@ -2,11 +2,6 @@
 
 This project is a large collection of developers' test applications for various functions and suites of golang.
 
-You need to set up a Docker network so that your application and Zipkin and Jaeger containers can communicate with each other.
-```  
-docker network create my-network
-```  
-
 ## 目录
   - [開發者的配置](#開發者的配置)
   - [使用方法](#使用方法)
@@ -43,6 +38,11 @@ With go 1.23 or higher:
  go install github.com/air-verse/air@latest
  air -v
 ``` 
+
+If you want to set up a Docker network so that your application and Zipkin and Jaeger containers can communicate with each other.
+```  
+docker network create my-network
+```  
 
 Main code execution methods
 ``` 
