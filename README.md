@@ -115,7 +115,7 @@ docker run --rm --name go-docker go-docker:latest -goroutineChannel
       - Set heartbeat messages to stay connected.
       - Generate messages randomly and send them, closing the connection safely when done.
       - Supports concurrent testing of multiple clients.   
-      
+
 These examples show how to implement basic functionality of a WebSocket server and client using the Go language and the Gorilla WebSocket suite.
 
 ##### Server (8080 Port)
@@ -164,7 +164,8 @@ docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClients
     - Key features:
       - Initialize the Zipkin tracker: Set up the exporter and tracker provider.
       - Creating and ending trace spans: Also use tracer.Start and span.End().
-      - Data export: Make sure the exporter has time to send data to Zipkin.
+      - Data export: Make sure the exporter has time to send data to Zipkin.   
+      
 These two examples show how to use OpenTelemetry to integrate Jaeger and Zipkin for distributed tracing to help analyze the performance and request flow of microservices.
 
 ##### Jaeger
