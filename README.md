@@ -15,7 +15,7 @@ This project is a large collection of developers' test applications for various 
     - [Docker](#Docker)
 
 
-### 開發者的配置
+## 開發者的配置
 
 1. go1.23.1 windows/amd64
 2. Docker version 27.2.0, build 3ab4256
@@ -23,7 +23,7 @@ This project is a large collection of developers' test applications for various 
 4. air v1.60.0, built with Go go1.23.1
 5. prometheus, version 3.0.0-beta.0
 
-### 使用方法
+## 使用方法
 
 Using the -help flag in the root directory will display all test functions.   
 This project uses Docker, you can use the go command and docker command to run the program.   
@@ -52,9 +52,9 @@ go run .\main.go -help
 docker run --rm --name go-docker go-docker:latest -help  
 ``` 
 
-### 單元
+## 單元
 
-#### Goroutine
+### Goroutine
 
   - Goroutine Base: Product inventory management
     - Function: Multiple consumers try to purchase goods and manage inventory through atomic operations.
@@ -68,7 +68,7 @@ docker run --rm --name go-docker go-docker:latest -help
 
 These examples demonstrate concurrent programming techniques in Go and are suitable for different application scenarios.
 
-##### Goroutine Base
+#### Goroutine Base
 
 ``` 
 go run .\main.go -goroutine
@@ -77,7 +77,7 @@ go run .\main.go -goroutine
 docker run --rm --name go-docker go-docker:latest -goroutine
 ```
 
-##### Goroutine Mutex
+#### Goroutine Mutex
 
 ``` 
 go run .\main.go -goroutineMutex
@@ -86,7 +86,7 @@ go run .\main.go -goroutineMutex
 docker run --rm --name go-docker go-docker:latest -goroutineMutex
 ```
 
-##### Goroutine Channel
+#### Goroutine Channel
 
 ``` 
 go run .\main.go -goroutineChannel
@@ -95,7 +95,7 @@ go run .\main.go -goroutineChannel
 docker run --rm --name go-docker go-docker:latest -goroutineChannel
 ```
 
-#### Websocket
+### Websocket
 
   - Server: WebSocket Hub server
     - Client: Represents the connected WebSocket client, including connection, sending channel and client ID.
@@ -118,7 +118,7 @@ docker run --rm --name go-docker go-docker:latest -goroutineChannel
 
 These examples show how to implement basic functionality of a WebSocket server and client using the Go language and the Gorilla WebSocket suite.
 
-##### Server (8080 Port)
+#### Server (8080 Port)
 
 ```   
 go run .\main.go -websocketServer
@@ -133,7 +133,7 @@ docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer
 docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer -monitor
 ``` 
 
-##### Client
+#### Client
 
 ```   
 go run .\main.go -websocketClient
@@ -142,7 +142,7 @@ go run .\main.go -websocketClient
 docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClient
 ``` 
 
-##### Clients
+#### Clients
 
 ```   
 go run .\main.go -websocketClients
@@ -151,7 +151,7 @@ go run .\main.go -websocketClients
 docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClients
 ``` 
 
-#### Tracing
+### Tracing
 
   - Jaeger: Jaeger tracking
     - Purpose: Use Jaeger for distributed tracing to help monitor and debug microservice architecture.
@@ -165,10 +165,10 @@ docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClients
       - Initialize the Zipkin tracker: Set up the exporter and tracker provider.
       - Creating and ending trace spans: Also use tracer.Start and span.End().
       - Data export: Make sure the exporter has time to send data to Zipkin.   
-      
+
 These two examples show how to use OpenTelemetry to integrate Jaeger and Zipkin for distributed tracing to help analyze the performance and request flow of microservices.
 
-##### Jaeger
+#### Jaeger
 
 1. Run Jaeger Server (16686Port)  
 
@@ -199,7 +199,7 @@ http://localhost:16686/
 docker stop jaeger
 ``` 
 
-##### Zipkin
+#### Zipkin
 
 1. Run Zipkin Server (9412Port)  
 
@@ -218,11 +218,11 @@ http://localhost:9412/
 docker stop zipkin
 ``` 
 
-#### Prometheus
+### Prometheus
 
 Under development
 
-##### Prometheus Base
+#### Prometheus Base
 
 ```   
 go run .\main.go -prometheus
@@ -231,24 +231,24 @@ go run .\main.go -prometheus
 docker run --rm --name go-docker -p 8080:8080 -p 9090:9090 go-docker:latest -prometheus
 ``` 
 
-### 指令
+## 指令
 
-#### Git
+### Git
 
 Here is a record of commonly used commands in Git
 
-##### Git common commands
+#### Git common commands
 ``` 
 git add .   
 git commit -m "Init"   
 git push -u origin main   
 ``` 
 
-#### Docker
+### Docker
 
 Here is a record of commonly used commands in Docker
 
-##### Docker common commands
+#### Docker common commands
 ```   
 docker build -t go-docker:latest .   
 docker images 
@@ -258,26 +258,26 @@ docker run --rm --name go-docker go-docker:latest
 docker run --rm --name go-docker -v ${PWD}:/app -v /app/tmp --name go-docker-air go-docker
 
 ```   
-#### Docker stop commands
+### Docker stop commands
 ```   
 docker ps
 docker stop <NAMES>
 ```   
 
-### 常見問題
+## 常見問題
 
 #### docker: Error response from daemon: Conflict. The container name "/xxxxxxxx" is already in use by container "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx". You have to remove (or rename) that container to be able to reuse that name.
 #### See 'docker run --help'.
 
-###### **Please run**
+  - Please run
 ```   
 docker stop xxxxxxxx
 docker rm xxxxxxxx
 ``` 
 
-#### "command not found: air" or "No such file or directory"
+### "command not found: air" or "No such file or directory"
 
-##### You can also directly copy the exe file to %GOROOT%\bin\, or use the following command
+  - You can also directly copy the exe file to %GOROOT%\bin\, or use the following command
 ```   
 export GOPATH=$HOME/xxxxx
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
