@@ -64,7 +64,7 @@ docker run --rm --name go-docker go-docker:latest -help
     - Key takeaway: Use sync.Mutex to ensure safe access to shared balances and avoid race conditions.
   - Goroutine Channel: Task producers and consumers
     - Function: Use Goroutine to generate random tasks and pass them to consumers for processing through channels.
-    - Key Point: Demonstrates the producer-consumer pattern and how to use stop channel to end production.
+    - Key Point: Demonstrates the producer-consumer pattern and how to use stop channel to end production.   
 
 These examples demonstrate concurrent programming techniques in Go and are suitable for different application scenarios.
 
@@ -114,7 +114,8 @@ docker run --rm --name go-docker go-docker:latest -goroutineChannel
     - Function:
       - Set heartbeat messages to stay connected.
       - Generate messages randomly and send them, closing the connection safely when done.
-      - Supports concurrent testing of multiple clients.
+      - Supports concurrent testing of multiple clients.   
+      
 These examples show how to implement basic functionality of a WebSocket server and client using the Go language and the Gorilla WebSocket suite.
 
 ##### Server (8080 Port)
