@@ -2,6 +2,10 @@
 
 If you want to use air, please make sure your go version >=1.23   
 
+If you want to use Prometheus, please download it from [Prometheus下載](https://prometheus.io/download/#:~:text=An%20open-source%20monitoring%20system%20with%20a) place
+1. Unzip the downloaded folder
+2. Copy prometheus.exe to %GOROOT%\bin\
+
 You need to set up a Docker network so that your application and Zipkin and Jaeger containers can communicate with each other.
 ```  
 docker network create my-network
@@ -9,12 +13,20 @@ docker network create my-network
 
 ## 目录
   - [單元](#單元)
+    - [Goroutine](#Goroutine Unit)
+    - [Websocket](#Websocket Unit)
+    - [Tracing](#Tracing Unit)
+    - [Prometheus](#Prometheus Unit)
   - [指令](#指令)
+    - [Git](#Git common commands)
+    - [Docker](#Docker common commands)
 
 ### 單元
 
 You can use -help to query tags
 ``` 
+go run .\main.go -help
+# or 
 docker run --rm --name go-docker go-docker:latest -help  
 ``` 
 #### Goroutine Unit
@@ -22,18 +34,24 @@ docker run --rm --name go-docker go-docker:latest -help
 ##### Goroutine
 
 ``` 
+go run .\main.go -goroutine
+# or 
 docker run --rm --name go-docker go-docker:latest -goroutine
 ```
 
 ##### Goroutine Mutex
 
 ``` 
+go run .\main.go -goroutineMutex
+# or  
 docker run --rm --name go-docker go-docker:latest -goroutineMutex
 ```
 
 ##### Goroutine Channel
 
 ``` 
+go run .\main.go -goroutineChannel
+# or  
 docker run --rm --name go-docker go-docker:latest -goroutineChannel
 ```
 
@@ -117,6 +135,16 @@ http://localhost:9412/
 
 ```   
 docker stop zipkin
+``` 
+
+#### Prometheus Unit
+
+##### Prometheus
+
+```   
+go run .\main.go -prometheus
+# or   
+docker run --rm --name go-docker -p 8080:8080 -p 9090:9090 go-docker:latest -prometheus
 ``` 
 
 ### 指令

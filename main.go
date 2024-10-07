@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	gpm "example.com/m/goroutine"
+	prometheus "example.com/m/prometheus"
 	tracing "example.com/m/tracing"
 	ws "example.com/m/websocket"
 )
@@ -16,11 +17,12 @@ func main() {
 		"websocketClients": flag.Bool("websocketClients", false, "Enable resource websocket clients"),
 		"websocketClient":  flag.Bool("websocketClient", false, "Enable resource websocket client"),
 		"monitor":          flag.Bool("monitor", false, "Enable resource monitoring"),
-		"goroutine":        flag.Bool("goroutine", false, "Enable goroutine"),
+		"goroutine":        flag.Bool("goroutine", false, "Enable goroutine base"),
 		"goroutineMutex":   flag.Bool("goroutineMutex", false, "Enable goroutine mutex"),
 		"goroutineChannel": flag.Bool("goroutineChannel", false, "Enable goroutine channel"),
 		"tracingJeager":    flag.Bool("tracingJeager", false, "Enable tracing jeager"),
 		"tracingZipkin":    flag.Bool("tracingZipkin", false, "Enable tracing zipkin"),
+		"prometheus":       flag.Bool("prometheus", false, "Enable prometheus base"),
 		"help":             flag.Bool("help", false, "Display help information"),
 	}
 
@@ -65,6 +67,8 @@ func main() {
 		tracing.TracingJeager()
 	case *flags["tracingZipkin"]:
 		tracing.TracingZipkin()
+	case *flags["prometheus"]:
+		prometheus.PrometheusBase()
 	default:
 		// Display error message if no flags are enabled
 		fmt.Println("Error: At least one option must be enabled. Please refer to -help for more information.")
@@ -78,10 +82,11 @@ func displayHelp() {
 	fmt.Println("  -websocketClients  Used to brute force test websocket server")
 	fmt.Println("  -websocketClient   Test connection to websocket server and send messages")
 	fmt.Println("  -monitor           Enable websocket server monitoring")
-	fmt.Println("  -goroutine         Enable goroutine")
+	fmt.Println("  -goroutine         Enable goroutine base")
 	fmt.Println("  -goroutineMutex    Enable goroutine mutex")
 	fmt.Println("  -goroutineChannel  Enable goroutine channel")
 	fmt.Println("  -tracingJeager     Enable tracing jeager to use 16686 port")
 	fmt.Println("  -tracingZipkin     Enable tracing zipkin to use 9412 port")
+	fmt.Println("  -prometheus        Enable prometheus base")
 	fmt.Println("  -help              Display help information")
 }
