@@ -2,7 +2,7 @@
 
 If you want to use air, please make sure your go version >=1.23   
 
-If you want to use Prometheus, please download it from [Prometheus下載](https://prometheus.io/download/#:~:text=An%20open-source%20monitoring%20system%20with%20a) place
+If you want to use Prometheus, please download it from [Prometheus Download](https://prometheus.io/download/#:~:text=An%20open-source%20monitoring%20system%20with%20a) place
 1. Unzip the downloaded folder
 2. Copy prometheus.exe to %GOROOT%\bin\
 
@@ -13,13 +13,13 @@ docker network create my-network
 
 ## 目录
   - [單元](#單元)
-    - [Goroutine](#Goroutine Unit)
-    - [Websocket](#Websocket Unit)
-    - [Tracing](#Tracing Unit)
-    - [Prometheus](#Prometheus Unit)
+    - [Goroutine](#GoroutineUnit)
+    - [Websocket](#WebsocketUnit)
+    - [Tracing](#TracingUnit)
+    - [Prometheus](#PrometheusUnit)
   - [指令](#指令)
-    - [Git](#Git common commands)
-    - [Docker](#Docker common commands)
+    - [Git](#Git)
+    - [Docker](#Docker)
 
 ### 單元
 
@@ -29,7 +29,7 @@ go run .\main.go -help
 # or 
 docker run --rm --name go-docker go-docker:latest -help  
 ``` 
-#### Goroutine Unit
+#### GoroutineUnit
 
 ##### Goroutine
 
@@ -55,7 +55,7 @@ go run .\main.go -goroutineChannel
 docker run --rm --name go-docker go-docker:latest -goroutineChannel
 ```
 
-#### Websocket Unit
+#### WebsocketUnit
 
 ##### Server (8080 Port)
 
@@ -85,7 +85,7 @@ go run .\main.go -websocketClients
 docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClients
 ``` 
 
-#### Tracing Unit
+#### TracingUnit
 
 ##### Jaeger
 
@@ -137,7 +137,7 @@ http://localhost:9412/
 docker stop zipkin
 ``` 
 
-#### Prometheus Unit
+#### PrometheusUnit
 
 ##### Prometheus
 
@@ -149,14 +149,18 @@ docker run --rm --name go-docker -p 8080:8080 -p 9090:9090 go-docker:latest -pro
 
 ### 指令
 
-#### Git common commands
+#### Git
+
+##### Git common commands
 ``` 
 git add .   
 git commit -m "Init"   
 git push -u origin main   
 ``` 
 
-#### Docker common commands
+#### Docker
+
+##### Docker common commands
 ```   
 docker build -t go-docker:latest .   
 docker images 
