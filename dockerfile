@@ -23,9 +23,10 @@ RUN if ! command -v prometheus &> /dev/null; then \
       apt-get install -y prometheus; \
     fi
 
-# 開放 8080 端口
+# 開放 8080 和 9090 端口
 EXPOSE 8080
 EXPOSE 9090
+EXPOSE 5432
 
 # 設定執行命令
 # ENTRYPOINT [ "air", "-c", ".air.toml" ]

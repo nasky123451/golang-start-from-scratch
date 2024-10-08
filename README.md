@@ -128,10 +128,10 @@ go run .\main.go -websocketServer
 go run .\main.go -websocketServer -monitor
 
 # Run using docker  
-docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer
+docker run --rm --name go-docker go-docker:latest -websocketServer
 
 # Run using docker and using monitor 
-docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer -monitor
+docker run --rm --name go-docker go-docker:latest -websocketServer -monitor
 ``` 
 
 #### Client
@@ -140,7 +140,7 @@ docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketServer 
 go run .\main.go -websocketClient
 
 # Run using docker  
-docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClient
+docker run --rm --name go-docker go-docker:latest -websocketClient
 ``` 
 
 #### Clients
@@ -149,7 +149,7 @@ docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClient
 go run .\main.go -websocketClients
 
 # Run using docker  
-docker run --rm --name go-docker -p 8080:8080 go-docker:latest -websocketClients
+docker run --rm --name go-docker go-docker:latest -websocketClients
 ``` 
 
 ### Tracing
@@ -246,7 +246,7 @@ Both examples demonstrate how to integrate Prometheus into a Go application, wit
 go run .\main.go -prometheus
 
 # Run using docker  
-docker run --rm --name go-docker -p 8080:8080 -p 9090:9090 go-docker:latest -prometheus
+docker run --rm --name go-docker go-docker:latest -prometheus
 ``` 
 
 #### Prometheus API Application
@@ -257,8 +257,8 @@ docker run --rm --name go-docker -p 8080:8080 -p 9090:9090 go-docker:latest -pro
 go run .\main.go -prometheusApiApplication
 
 # Run using docker  
-docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test -p 5432:5432 postgres:latest
-docker run --rm --name go-docker --network my-network -p 8080:8080 -p 9090:9090 go-docker:latest -prometheusApiApplication
+docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test postgres:latest
+docker run --rm --name go-docker --network my-network go-docker:latest -prometheusApiApplication
 ``` 
 
 2. Go to browser
