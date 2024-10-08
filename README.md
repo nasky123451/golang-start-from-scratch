@@ -17,11 +17,12 @@ This project is a large collection of developers' test applications for various 
 
 ## 開發者的配置
 
-1. go1.23.1 windows/amd64
-2. Docker version 27.2.0, build 3ab4256
-3. git version 2.46.2.windows.1
-4. air v1.60.0, built with Go go1.23.1
-5. prometheus, version 3.0.0-beta.0
+1. go - go1.23.1 windows/amd64
+2. Docker - Docker version 27.2.0, build 3ab4256
+3. git - git version 2.46.2.windows.1
+4. air - air v1.60.0, built with Go go1.23.1
+5. prometheus - prometheus, version 3.0.0-beta.0
+6. PostgreSQL - PostgreSQL 17.0 on x86_64-windows, compiled by msvc-19.41.34120, 64-bit
 
 ## 使用方法
 
@@ -220,7 +221,24 @@ docker stop zipkin
 
 ### Prometheus
 
-Under development
+  - Prometheus Base: Basic Prometheus Application
+    - Purpose: Sets up a simple HTTP server that integrates with Prometheus for basic metrics.
+    - Key Features:
+      - Responds with "Hello, World!" at the root path ("/").
+      - Exposes a /metrics endpoint for Prometheus to scrape metrics.
+      - Tracks request count and duration for monitoring.
+  - Prometheus API Application: Prometheus API Application with Database
+    - Purpose: Expands the first example to include database interactions and multiple API routes.
+    - Key Features:
+      - Listens on port 8080 with multiple routes:
+        - /api/v1/resource: Fetches and returns resources from a PostgreSQL database as JSON.
+        - /api/v1/login: Simulates a login response.
+        - /health: Returns a health check status.
+        - /metrics: Serves Prometheus metrics.
+      - Supports graceful shutdown, allowing cleanup before terminating.
+      - Updates metrics for request counts, durations, and latencies.   
+
+Both examples demonstrate how to integrate Prometheus into a Go application, with the first being a simple server and the second providing a more complex API with database functionality.
 
 #### Prometheus Base
 
@@ -229,6 +247,28 @@ go run .\main.go -prometheus
 
 # Run using docker  
 docker run --rm --name go-docker -p 8080:8080 -p 9090:9090 go-docker:latest -prometheus
+``` 
+
+#### Prometheus API Application
+
+1. Run Postgres Server (5432Port)  
+
+```   
+go run .\main.go -prometheusApiApplication
+
+# Run using docker  
+docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test -p 5432:5432 postgres:latest
+docker run --rm --name go-docker --network my-network -p 8080:8080 -p 9090:9090 go-docker:latest -prometheusApiApplication
+``` 
+
+2. Go to browser
+
+http://localhost:9090/   
+
+3. Stop Postgres Server (5432Port)  
+
+```   
+docker stop postgres-container
 ``` 
 
 ## 指令
