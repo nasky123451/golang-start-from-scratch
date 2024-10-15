@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -33,8 +34,20 @@ func startPrometheus() {
 
 // Initialize database, connect to PostgreSQL
 func initDB() (*sql.DB, error) {
-	connStr := "host=postgres-container user=postgres password=henry dbname=test sslmode=disable" // Configure as needed
-	return sql.Open("postgres", connStr)
+	// 读取 DATABASE_URL 环境变量
+	databaseURL := os.Getenv("DATABASE_URL")
+
+	// 如果没有设置 DATABASE_URL，则使用默认值
+	if databaseURL == "" {
+		// 默认使用本地连接
+		databaseURL = "localhost"
+	}
+
+	// 构建完整的连接字符串
+	url := "postgres://postgres:henry@" + databaseURL + ":5432/test?sslmode=disable"
+
+	// 使用 DATABASE_URL 直接連接數據庫
+	return sql.Open("postgres", url)
 }
 
 // checkAndCreateTable checks if the resources table exists, and creates it if it does not

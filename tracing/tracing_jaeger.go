@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -50,9 +51,17 @@ func initJeagerTracer(endpoint string) (func(), error) {
 }
 
 func TracingJeager() {
-	// Jaeger 的端點
-	// endpoint := "http://localhost:14268/api/traces"
-	endpoint := "http://jaeger:14268/api/traces"
+	url := os.Getenv("DATABASE_URL")
+
+	// 如果没有设置 DATABASE_URL，则使用默认值
+	if url == "" {
+		// 默认使用本地连接
+		url = "localhost"
+	}
+
+	// Dynamically construct the endpoint
+	endpoint := "http://" + url + ":14268/api/traces"
+
 	shutdown, err := initJeagerTracer(endpoint)
 	if err != nil {
 		log.Fatalf("初始化追踪器失敗: %v", err)

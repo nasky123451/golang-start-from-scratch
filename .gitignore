@@ -5,6 +5,7 @@
 *.a
 *.so
 *.dll
+*.bat
 
 vendor/
 tmp/

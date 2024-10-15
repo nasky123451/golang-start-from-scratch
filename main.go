@@ -13,7 +13,8 @@ import (
 func main() {
 	// Define flags
 	flags := map[string]*bool{
-		"websocketServer":          flag.Bool("websocketServer", false, "Enable resource websocket server"),
+		"websocketServer":          flag.Bool("websocketServer", false, "Enable resource websocket server disable monitor"),
+		"websocketServerMonitor":   flag.Bool("websocketServerMonitor", false, "Enable resource websocket server enable monitor"),
 		"websocketClients":         flag.Bool("websocketClients", false, "Enable resource websocket clients"),
 		"websocketClient":          flag.Bool("websocketClient", false, "Enable resource websocket client"),
 		"monitor":                  flag.Bool("monitor", false, "Enable resource monitoring"),
@@ -53,7 +54,11 @@ func main() {
 	// Start corresponding functionality based on enabled flags
 	switch {
 	case *flags["websocketServer"]:
-		ws.WebsocketServer(flags["monitor"])
+		isSecure := false
+		ws.WebsocketServer(&isSecure)
+	case *flags["websocketServerMonitor"]:
+		isSecure := true
+		ws.WebsocketServer(&isSecure)
 	case *flags["websocketClients"]:
 		ws.WebsocketClients()
 	case *flags["websocketClient"]:
@@ -81,7 +86,8 @@ func main() {
 // displayHelp prints the help information for available flags
 func displayHelp() {
 	fmt.Println("Available options:")
-	fmt.Println("  -websocketServer   		  Enable websocket server to use 8080 port")
+	fmt.Println("  -websocketServer   		  Enable websocket server to use 8080 port disable monitor")
+	fmt.Println("  -websocketServerMonitor    Enable websocket server to use 8080 port enable monitor")
 	fmt.Println("  -websocketClients  		  Used to brute force test websocket server")
 	fmt.Println("  -websocketClient  		  Test connection to websocket server and send messages")
 	fmt.Println("  -monitor          		  Enable websocket server monitoring")

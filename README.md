@@ -23,6 +23,7 @@ This project is a large collection of developers' test applications for various 
 4. air - air v1.60.0, built with Go go1.23.1
 5. prometheus - prometheus, version 3.0.0-beta.0
 6. PostgreSQL - PostgreSQL 17.0 on x86_64-windows, compiled by msvc-19.41.34120, 64-bit
+7. Redis - Redis server v=5.0.14.1
 
 ## 使用方法
 
@@ -32,6 +33,8 @@ This project uses Docker, you can use the go command and docker command to run t
 If you want to use Prometheus, please download it from [Prometheus Download](https://prometheus.io/download/#:~:text=An%20open-source%20monitoring%20system%20with%20a) place
 1. Unzip the downloaded folder
 2. Copy prometheus.exe to %GOROOT%\bin\   
+
+If you want to use Redis, please download it from [Redis for windows Download](https://github.com/tporadowski/redis/releases) place
 
 If you want to use Air, please installation
 With go 1.23 or higher:
@@ -125,13 +128,13 @@ These examples show how to implement basic functionality of a WebSocket server a
 go run .\main.go -websocketServer
 
 # using monitor  
-go run .\main.go -websocketServer -monitor
+go run .\main.go -websocketServerMonitor
 
 # Run using docker  
 docker run --rm --name go-docker go-docker:latest -websocketServer
 
 # Run using docker and using monitor 
-docker run --rm --name go-docker go-docker:latest -websocketServer -monitor
+docker run --rm --name go-docker go-docker:latest -websocketServerMonitor
 ``` 
 
 #### Client
@@ -187,7 +190,7 @@ docker run -d --rm --name jaeger `
   -p 9411:9411 `
   jaegertracing/all-in-one:1.32
 
-docker run --rm --name go-docker --network my-network go-docker:latest -tracingJeager
+docker run --rm --name go-docker --network my-network -e "DATABASE_URL=jaeger" go-docker:latest -tracingJeager
 ``` 
 
 2. Go to browser
@@ -204,9 +207,9 @@ docker stop jaeger
 
 1. Run Zipkin Server (9412Port)  
 
-```   
-docker run -d --rm --name zipkin --network my-network -p 9412:9411 openzipkin/zipkin
-docker run --rm --name go-docker --network my-network go-docker:latest -tracingZipkin
+``` 
+docker run -d --rm --name zipkin --network my-network -p 9412:9411 openzipkin/zipkin  
+docker run --rm --name go-docker --network my-network -e "DATABASE_URL=zipkin" go-docker:latest -tracingZipkin
 ``` 
 
 2. Go to browser
@@ -258,7 +261,7 @@ go run .\main.go -prometheusApiApplication
 
 # Run using docker  
 docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test postgres:latest
-docker run --rm --name go-docker --network my-network go-docker:latest -prometheusApiApplication
+docker run --rm --name go-docker --network my-network -e "DATABASE_URL=postgres-container" go-docker:latest -prometheusApiApplication
 ``` 
 
 2. Go to browser
