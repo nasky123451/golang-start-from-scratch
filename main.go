@@ -6,6 +6,7 @@ import (
 
 	gpm "example.com/m/goroutine"
 	prometheus "example.com/m/prometheus"
+	rdb "example.com/m/redis"
 	tracing "example.com/m/tracing"
 	ws "example.com/m/websocket"
 )
@@ -25,6 +26,7 @@ func main() {
 		"tracingZipkin":            flag.Bool("tracingZipkin", false, "Enable tracing zipkin"),
 		"prometheus":               flag.Bool("prometheus", false, "Enable prometheus base"),
 		"prometheusApiApplication": flag.Bool("prometheusApiApplication", false, "Enable prometheus api application"),
+		"redisbase":                flag.Bool("redisbase", false, "Enable redis base"),
 		"help":                     flag.Bool("help", false, "Display help information"),
 	}
 
@@ -77,6 +79,8 @@ func main() {
 		prometheus.PrometheusBase()
 	case *flags["prometheusApiApplication"]:
 		prometheus.PrometheusApiApplication()
+	case *flags["redisbase"]:
+		rdb.RedisBase()
 	default:
 		// Display error message if no flags are enabled
 		fmt.Println("Error: At least one option must be enabled. Please refer to -help for more information.")
@@ -98,5 +102,6 @@ func displayHelp() {
 	fmt.Println("  -tracingZipkin             Enable tracing zipkin to use 9412 port")
 	fmt.Println("  -prometheus                Enable prometheus base to use 8080 & 9090 port")
 	fmt.Println("  -prometheusApiApplication  Enable prometheus api application to use 8080 & 9090 port")
+	fmt.Println("  -redisbase  				  Enable redis base to use 5432 & 6379 port")
 	fmt.Println("  -help              		  Display help information")
 }

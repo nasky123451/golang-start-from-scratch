@@ -10,6 +10,7 @@ This project is a large collection of developers' test applications for various 
     - [Websocket](#Websocket)
     - [Tracing](#Tracing)
     - [Prometheus](#Prometheus)
+    - [Redis](#Redis)
   - [指令](#指令)
     - [Git](#Git)
     - [Docker](#Docker)
@@ -27,34 +28,43 @@ This project is a large collection of developers' test applications for various 
 
 ## 使用方法
 
-Using the -help flag in the root directory will display all test functions.   
-This project uses Docker, you can use the go command and docker command to run the program.   
+Welcome to the project! Follow these steps to get up and running quickly.
 
-If you want to use Prometheus, please download it from [Prometheus Download](https://prometheus.io/download/#:~:text=An%20open-source%20monitoring%20system%20with%20a) place
-1. Unzip the downloaded folder
-2. Copy prometheus.exe to %GOROOT%\bin\   
-
-If you want to use Redis, please download it from [Redis for windows Download](https://github.com/tporadowski/redis/releases) place
-
-If you want to use Air, please installation
-With go 1.23 or higher:
+### Displaying All Test Functions
+To view all available test functions, use the -help flag in the root directory:
 ``` 
- go install github.com/air-verse/air@latest
- air -v
+go run .\main.go -help
 ``` 
 
-If you want to set up a Docker network so that your application and Zipkin and Jaeger containers can communicate with each other.
+### Running with Docker
+This project supports Docker, and you can choose to run it using either Go commands or Docker commands:
+```  
+docker build -t go-docker:latest .
+docker run --rm --name go-docker go-docker:latest -help
+```  
+
+### Setting Up Prometheus
+If you'd like to integrate Prometheus for monitoring, follow these steps:
+
+1. Download Prometheus from the [Prometheus Download page](https://prometheus.io/download/#:~:text=An%20open-source%20monitoring%20system%20with%20a).
+2. Unzip the downloaded folder.
+3. Copy prometheus.exe to the %GOROOT%\bin\ directory for easy access from the command line.
+
+### Setting Up Redis
+To use Redis in your project, download the Windows-compatible version from the [Redis for Windows Download page](https://github.com/tporadowski/redis/releases).
+
+### Installing Air for Hot Reloading
+For more efficient development and debugging, it's recommended to install the Air hot-reloading tool. Ensure your Go version is 1.23 or higher:
+```  
+go install github.com/air-verse/air@latest
+air -v
+```  
+
+Configuring Docker Network
+To enable communication between your application and Zipkin or Jaeger containers, create a Docker network:
 ```  
 docker network create my-network
 ```  
-
-Main code execution methods
-``` 
-go run .\main.go -help
-
-# Run using docker
-docker run --rm --name go-docker go-docker:latest -help  
-``` 
 
 ## 單元
 
@@ -190,7 +200,7 @@ docker run -d --rm --name jaeger `
   -p 9411:9411 `
   jaegertracing/all-in-one:1.32
 
-docker run --rm --name go-docker --network my-network -e "DATABASE_URL=jaeger" go-docker:latest -tracingJeager
+docker run --rm --name go-docker --network my-network -e "URL=jaeger" go-docker:latest -tracingJeager
 ``` 
 
 2. Go to browser
@@ -209,7 +219,7 @@ docker stop jaeger
 
 ``` 
 docker run -d --rm --name zipkin --network my-network -p 9412:9411 openzipkin/zipkin  
-docker run --rm --name go-docker --network my-network -e "DATABASE_URL=zipkin" go-docker:latest -tracingZipkin
+docker run --rm --name go-docker --network my-network -e "URL=zipkin" go-docker:latest -tracingZipkin
 ``` 
 
 2. Go to browser
@@ -271,6 +281,30 @@ http://localhost:9090/
 3. Stop Postgres Server (5432Port)  
 
 ```   
+docker stop postgres-container
+``` 
+
+### Redis
+
+Under development
+
+#### Redis Base
+
+1. Run Postgres Server (5432Port & 6379port)  
+
+```   
+go run .\main.go -redisbase
+
+# Run using docker  
+docker run -d --rm --name redis-container --network my-network redis:latest
+docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test postgres:latest
+docker run --rm --name go-docker --network my-network -e "DATABASE_URL=postgres-container" -e "REDIS_URL=redis-container" go-docker:latest -redisbase
+``` 
+
+2. Stop Postgres Server (5432Port & 6379port)  
+
+```   
+docker stop redis-container
 docker stop postgres-container
 ``` 
 

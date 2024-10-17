@@ -51,9 +51,9 @@ func initJeagerTracer(endpoint string) (func(), error) {
 }
 
 func TracingJeager() {
-	url := os.Getenv("DATABASE_URL")
+	url := os.Getenv("URL")
 
-	// 如果没有设置 DATABASE_URL，则使用默认值
+	// 如果没有设置 URL，则使用默认值
 	if url == "" {
 		// 默认使用本地连接
 		url = "localhost"

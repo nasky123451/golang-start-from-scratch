@@ -34,19 +34,19 @@ func startPrometheus() {
 
 // Initialize database, connect to PostgreSQL
 func initDB() (*sql.DB, error) {
-	// 读取 DATABASE_URL 环境变量
+	// Read the DATABASE_URL environment variable
 	databaseURL := os.Getenv("DATABASE_URL")
 
-	// 如果没有设置 DATABASE_URL，则使用默认值
+	// If DATABASE_URL is not set, the default value is used
 	if databaseURL == "" {
-		// 默认使用本地连接
+		// Use local connection by default
 		databaseURL = "localhost"
 	}
 
-	// 构建完整的连接字符串
+	// Build the complete connection string
 	url := "postgres://postgres:henry@" + databaseURL + ":5432/test?sslmode=disable"
 
-	// 使用 DATABASE_URL 直接連接數據庫
+	// Use DATABASE_URL to connect directly to the database
 	return sql.Open("postgres", url)
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -50,9 +51,16 @@ func initZipkinTracer(endpoint string) (func(), error) {
 }
 
 func TracingZipkin() {
-	// Zipkin 的端點
-	// endpoint := "http://localhost:9411/api/v2/spans"
-	endpoint := "http://zipkin:9411/api/v2/spans"
+	url := os.Getenv("URL")
+
+	// 如果没有设置 URL，则使用默认值
+	if url == "" {
+		// 默认使用本地连接
+		url = "localhost"
+	}
+
+	// Dynamically construct the endpoint
+	endpoint := "http://" + url + ":9411/api/v2/spans"
 	shutdown, err := initZipkinTracer(endpoint)
 	if err != nil {
 		log.Fatalf("初始化追踪器失敗: %v", err)

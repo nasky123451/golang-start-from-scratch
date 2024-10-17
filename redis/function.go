@@ -3,19 +3,52 @@ package redis
 import (
 	"database/sql"
 	"fmt"
+	"os"
 )
+
+func initRedis() (*RedisClient, error) {
+	// Read the DATABASE_URL environment variable
+	redisURL := os.Getenv("REDIS_URL")
+
+	// If REDIS_URL is not set, the default value is used
+	if redisURL == "" {
+		// Use local connection by default
+		redisURL = "localhost"
+	}
+
+	// Build the complete connection string
+	url := redisURL + ":6379"
+
+	rdb := NewRedisClient(url, "", 0)
+
+	// Use REDIS_URL to connect directly to the Redis
+	return rdb, nil
+
+}
 
 // Initialize database, connect to PostgreSQL
 func initDB() (*sql.DB, error) {
-	connStr := "host=postgres-container user=postgres password=henry dbname=test sslmode=disable" // Configure as needed
-	return sql.Open("postgres", connStr)
+	// Read the DATABASE_URL environment variable
+	databaseURL := os.Getenv("DATABASE_URL")
+
+	// If DATABASE_URL is not set, the default value is used
+	if databaseURL == "" {
+		// Use local connection by default
+		databaseURL = "localhost"
+	}
+
+	// Build the complete connection string
+	url := "postgres://postgres:henry@" + databaseURL + ":5432/test?sslmode=disable"
+
+	// Use DATABASE_URL to connect directly to the database
+	return sql.Open("postgres", url)
 }
 
 // checkAndCreateTable checks if the resources table exists, and creates it if it does not
 func checkAndCreateTable(db *sql.DB) error {
 	var exists bool
 	// Check if the table exists
-	err := db.QueryRow("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'resources');").Scan(&exists)
+	err := db.QueryRow("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users');").Scan(&exists)
 	if err != nil {
 		return err
 	}
@@ -23,26 +56,37 @@ func checkAndCreateTable(db *sql.DB) error {
 	// If the table does not exist, create it
 	if !exists {
 		createTableSQL := `
-		CREATE TABLE resources (
+		CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
-			name VARCHAR(100) NOT NULL,
-			type VARCHAR(50) NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			name TEXT NOT NULL,
+			email TEXT NOT NULL UNIQUE
 		);`
 		_, err = db.Exec(createTableSQL)
 		if err != nil {
 			return err
 		}
-		fmt.Println("Table 'resources' created.")
+		fmt.Println("Table 'users' created.")
+	}
 
-		_, err = db.Exec("INSERT INTO resources (name, type) VALUES ($1, $2), ($3, $4), ($5, $6) ON CONFLICT DO NOTHING",
-			"Resource A", "Type 1",
-			"Resource B", "Type 2",
-			"Resource C", "Type 3")
+	// Check if the table exists
+	err = db.QueryRow("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'access_logs');").Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	// If the table does not exist, create it
+	if !exists {
+		createTableSQL := `
+		CREATE TABLE IF NOT EXISTS access_logs (
+			id SERIAL PRIMARY KEY,
+			user_id INT REFERENCES users(id),
+			access_time TIMESTAMP DEFAULT NOW()
+		);`
+		_, err = db.Exec(createTableSQL)
 		if err != nil {
 			return err
 		}
+		fmt.Println("Table 'access_logs' created.")
 	}
 
 	return nil
