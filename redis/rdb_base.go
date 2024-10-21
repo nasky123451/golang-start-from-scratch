@@ -55,34 +55,39 @@ func GetUserLastAccess(ctx context.Context, rdb *redis.Client, userID int) (stri
 	return lastAccess, nil
 }
 
-// RedisBase handles the entire Redis and PostgreSQL process flow
-func RedisBase() {
-	rdb, _ := initRedis()
-	db, err := initDB()
+func initBase() {
+	redisClient, _ = initRedis()
+	pgConn, err := initDB()
+
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer pgConn.Close()
 
-	if err := checkAndCreateTableBase(db); err != nil {
+	if err := checkAndCreateTableBase(pgConn); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// RedisBase handles the entire Redis and PostgreSQL process flow
+func RedisBase() {
+	initBase()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// 註冊用戶
-	if err := handleUserRegistration(ctx, db, "Henry", "Henry@example.com"); err != nil {
+	if err := handleUserRegistration(ctx, pgConn, "Henry", "Henry@example.com"); err != nil {
 		log.Fatal(err)
 	}
 
 	// 記錄用戶訪問
-	if err := LogUserAccess(ctx, db, rdb, 1); err != nil {
+	if err := LogUserAccess(ctx, pgConn, redisClient, 1); err != nil {
 		log.Fatalf("Failed to log user access: %v", err)
 	}
 
 	// 獲取用戶的最後訪問時間
-	if lastAccess, err := GetUserLastAccess(ctx, rdb, 1); err != nil {
+	if lastAccess, err := GetUserLastAccess(ctx, redisClient, 1); err != nil {
 		log.Fatalf("Failed to get user's last access time: %v", err)
 	} else {
 		log.Printf("User 1's last access time: %s", lastAccess)

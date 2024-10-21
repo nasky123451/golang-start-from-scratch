@@ -1,23 +1,11 @@
 package redis
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/jackc/pgx/v5/pgxpool"
-)
-
-// Global Redis and PostgreSQL clients
-var (
-	redisClient *redis.Client // Redis Client
-	pgConn      *pgxpool.Pool
-	ctx         = context.Background()
-	sessionTTL  = 10 * time.Minute
-	mu          sync.Mutex
 )
 
 // Use Redis distributed locks to handle sensitive operations (e.g., transfers)
@@ -115,7 +103,7 @@ func simulateUserActivity(username string) {
 	}
 }
 
-func RedisTransferMoney() {
+func initMoney() {
 	var err error
 	// Redis single-node configuration
 	redisClient, err = initRedis()
@@ -147,12 +135,16 @@ func RedisTransferMoney() {
 			log.Fatal(err)
 		}
 	}
+}
+
+func RedisTransferMoney() {
+	initMoney()
 
 	// Start listening to Redis expiration events
 	go subscribeToRedis()
 
 	// Simulate transfer operation
-	if err = transferFunds("alice", "bob", 50.0); err != nil {
+	if err := transferFunds("alice", "bob", 50.0); err != nil {
 		log.Fatalf("Error transferring funds: %v", err)
 	}
 

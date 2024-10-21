@@ -1,0 +1,11 @@
+{"error":"EOF","level":"error","msg":"Registration failed","time":"2024-10-21T16:51:37+08:00","username":"testuser"}
+{"error":"EOF","level":"error","msg":"Registration failed","time":"2024-10-21T16:51:42+08:00","username":"test"}
+{"level":"info","msg":"User registered successfully","time":"2024-10-21T16:53:13+08:00","username":"test"}
+{"level":"info","msg":"User registered successfully","time":"2024-10-21T16:57:20+08:00","username":"test"}
+{"level":"error","msg":"Error registering user","time":"2024-10-21T17:02:50+08:00","username":"test"}
+{"level":"info","msg":"User registered successfully","time":"2024-10-21T17:03:00+08:00","username":"test"}
+{"level":"error","msg":"Invalid username or password","time":"2024-10-21T17:05:52+08:00"}
+{"level":"error","msg":"Error registering user","time":"2024-10-21T17:11:20+08:00","username":"test"}
+{"level":"info","msg":"User registered successfully","time":"2024-10-21T17:11:34+08:00","username":"test"}
+{"level":"error","msg":"Invalid username or password","time":"2024-10-21T17:11:46+08:00"}
+{"level":"info","msg":"User registered successfully","time":"2024-10-21T17:45:03+08:00","username":"test1"}

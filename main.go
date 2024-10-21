@@ -28,6 +28,7 @@ func main() {
 		"prometheusApiApplication": flag.Bool("prometheusApiApplication", false, "Enable prometheus api application"),
 		"redisbase":                flag.Bool("redisbase", false, "Enable redis base"),
 		"redisTransferMoney":       flag.Bool("redisTransferMoney", false, "Enable redis transfer money"),
+		"redisChat":                flag.Bool("redisChat", false, "Enable redis chat"),
 		"help":                     flag.Bool("help", false, "Display help information"),
 	}
 
@@ -84,6 +85,8 @@ func main() {
 		rdb.RedisBase()
 	case *flags["redisTransferMoney"]:
 		rdb.RedisTransferMoney()
+	case *flags["redisChat"]:
+		rdb.RedisChat()
 	default:
 		// Display error message if no flags are enabled
 		fmt.Println("Error: At least one option must be enabled. Please refer to -help for more information.")
@@ -107,5 +110,6 @@ func displayHelp() {
 	fmt.Println("  -prometheusApiApplication  Enable prometheus api application to use 8080 & 9090 port")
 	fmt.Println("  -redisbase  				  Enable redis base to use 5432 & 6379 port")
 	fmt.Println("  -redisTransferMoney  	  Enable redis transfer money to use 5432 & 6379 port")
+	fmt.Println("  -redisChat  	 	  		  Enable redis chat to use 5432 & 6379 & 3000 port")
 	fmt.Println("  -help              		  Display help information")
 }

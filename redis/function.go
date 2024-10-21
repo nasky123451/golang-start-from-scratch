@@ -4,10 +4,51 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
+)
+
+var (
+	redisClient *redis.Client
+	pgConn      *pgxpool.Pool
+	ctx         = context.Background()
+	upgrader    = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
+	clients     = make(map[*websocket.Conn]string)
+	messages    []Message
+	sessionTTL  = 10 * time.Minute
+	mu          sync.Mutex
+	logger      = logrus.New()
+	authKey     = "YOUR_GENERATED_AUTH_KEY"
+	secretKey   = "YOUR_GENERATED_SECRET_KEY"
+
+	// Prometheus metrics
+	registerUserCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "user_registration_total",
+			Help: "Total number of user registrations",
+		},
+		[]string{"status"},
+	)
+
+	loginCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "user_login_total",
+			Help: "Total number of user logins",
+		},
+		[]string{"status"},
+	)
+	messageCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "chat_messages_total",
+		Help: "Total number of chat messages sent",
+	}, []string{"room"})
 )
 
 func initRedis() (*redis.Client, error) {
@@ -229,4 +270,20 @@ func userExistsMoney(db *pgxpool.Pool, username string) (bool, error) {
 		return false, err
 	}
 	return exists, nil
+}
+
+// checkAndCreateTableChat checks and creates the chat table
+func checkAndCreateTableChat(db *pgxpool.Pool) error {
+	// Check and create the chat table
+	chatTableSQL := `
+		CREATE TABLE users (
+		id SERIAL PRIMARY KEY,
+		username VARCHAR(50) UNIQUE NOT NULL,
+		password VARCHAR(255) NOT NULL
+	);`
+	if err := checkAndCreateTable(db, "users", chatTableSQL); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -15,6 +15,7 @@ This project is a large collection of developers' test applications for various 
     - [Git](#Git)
     - [Docker](#Docker)
   - [常見問題](#常見問題)
+  - [貢獻](#貢獻)
 
 ## 開發者的配置
 
@@ -308,6 +309,26 @@ docker stop redis-container
 docker stop postgres-container
 ``` 
 
+#### Redis Transfer Money
+
+1. Run Postgres Server (5432Port & 6379port)  
+
+```   
+go run .\main.go -redisTransferMoney
+
+# Run using docker  
+docker run -d --rm --name redis-container --network my-network redis:latest
+docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test postgres:latest
+docker run --rm --name go-docker --network my-network -e "DATABASE_URL=postgres-container" -e "REDIS_URL=redis-container" go-docker:latest -redisTransferMoney
+``` 
+
+2. Stop Postgres Server (5432Port & 6379port)  
+
+```   
+docker stop redis-container
+docker stop postgres-container
+``` 
+
 ## 指令
 
 ### Git
@@ -343,20 +364,47 @@ docker stop <NAMES>
 
 ## 常見問題
 
-#### docker: Error response from daemon: Conflict. The container name "/xxxxxxxx" is already in use by container "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx". You have to remove (or rename) that container to be able to reuse that name.
-#### See 'docker run --help'.
+### Question 1: How to resolve dependency issues?
+- **Answer:** Make sure to use `go mod tidy` to ensure all dependencies are up to date.
 
-  - Please run
-```   
-docker stop xxxxxxxx
-docker rm xxxxxxxx
-``` 
+### Question 2: How to troubleshoot Docker container issues?
+- **Answer:** Check container logs with `docker logs <container_name>` to debug issues.
 
-### "command not found: air" or "No such file or directory"
+### Question 3: How to manage multiple versions of Go?
+- **Answer:** Use tools like `gvm` or `asdf` to manage multiple Go versions seamlessly.
 
-  - You can also directly copy the exe file to %GOROOT%\bin\, or use the following command
-```   
-export GOPATH=$HOME/xxxxx
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-export PATH=$PATH:$(go env GOPATH)/bin <---- Confirm this line in you profile!!!
-```   
+### Question 4: How to test specific functions?
+- **Answer:** Use the `-test` flag followed by the function name to run specific tests.
+
+### Question 5: How to reset Redis data?
+- **Answer:** Use the `FLUSHALL` command in the Redis CLI to remove all data from the database.
+
+### Error Handling
+
+1. **Docker Run Error**:
+   - **Error Message**:
+     ```
+     docker: Error response from daemon: Conflict. The container name "/xxxxxxxx" is already in use by container "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx". You have to remove (or rename) that container to be able to reuse that name.
+     See 'docker run --help'.
+     ```
+   - **Solution**:
+     ```bash
+     docker stop xxxxxxxx
+     docker rm xxxxxxxx
+     ```
+
+2. **Air Command Not Found**:
+   - **Error Message**:
+     ```
+     "command not found: air" or "No such file or directory"
+     ```
+   - **Solution**: You can directly copy the executable file to `%GOROOT%\bin\`, or use the following commands to set environment variables:
+     ```bash
+     export GOPATH=$HOME/xxxxx
+     export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+     export PATH=$PATH:$(go env GOPATH)/bin <---- Confirm this line in your profile!!!
+     ```
+
+## 貢獻
+
+We welcome contributions! Please submit a pull request with your changes or open an issue for discussions.
