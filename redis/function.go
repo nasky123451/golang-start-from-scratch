@@ -21,8 +21,7 @@ var (
 	pgConn      *pgxpool.Pool
 	ctx         = context.Background()
 	upgrader    = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
-	clients     = make(map[*websocket.Conn]string)
-	messages    []Message
+	clients     = make(map[*websocket.Conn]bool)
 	sessionTTL  = 10 * time.Minute
 	mu          sync.Mutex
 	logger      = logrus.New()
@@ -270,20 +269,4 @@ func userExistsMoney(db *pgxpool.Pool, username string) (bool, error) {
 		return false, err
 	}
 	return exists, nil
-}
-
-// checkAndCreateTableChat checks and creates the chat table
-func checkAndCreateTableChat(db *pgxpool.Pool) error {
-	// Check and create the chat table
-	chatTableSQL := `
-		CREATE TABLE users (
-		id SERIAL PRIMARY KEY,
-		username VARCHAR(50) UNIQUE NOT NULL,
-		password VARCHAR(255) NOT NULL
-	);`
-	if err := checkAndCreateTable(db, "users", chatTableSQL); err != nil {
-		return err
-	}
-
-	return nil
 }
