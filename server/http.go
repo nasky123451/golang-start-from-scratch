@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -47,7 +47,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Method not allowed.\n"))
 }
 
-func main() {
+func HttpServer() {
 	http.HandleFunc("/", handler)
 
 	port := ":8080" // 設置伺服器端口

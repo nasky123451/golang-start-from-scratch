@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -47,7 +47,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
+func WebsocketServer() {
 	// 設置 WebSocket 路由
 	http.HandleFunc("/ws", wsHandler)
 

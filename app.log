@@ -9,3 +9,9 @@
 {"level":"info","msg":"User registered successfully","time":"2024-10-21T17:11:34+08:00","username":"test"}
 {"level":"error","msg":"Invalid username or password","time":"2024-10-21T17:11:46+08:00"}
 {"level":"info","msg":"User registered successfully","time":"2024-10-21T17:45:03+08:00","username":"test1"}
+{"level":"error","msg":"Error fetching earliest chat date:can't scan into dest[0]: cannot scan NULL into *time.Time","time":"2024-10-23T20:16:26+08:00"}
+{"level":"error","msg":"Error fetching earliest chat date:can't scan into dest[0]: cannot scan NULL into *time.Time","time":"2024-10-23T20:17:01+08:00"}
+{"level":"error","msg":"Error scanning message:number of field descriptions must equal number of destinations, got 5 and 4","time":"2024-10-23T20:50:05+08:00"}
+{"level":"error","msg":"Error scanning message:number of field descriptions must equal number of destinations, got 5 and 4","time":"2024-10-23T20:50:51+08:00"}
+{"level":"error","msg":"Invalid username or password","time":"2024-10-23T22:35:20+08:00"}
+{"level":"error","msg":"Invalid username or password","time":"2024-10-23T22:35:27+08:00"}

@@ -8,6 +8,7 @@ import (
 	gpm "example.com/m/goroutine"
 	prometheus "example.com/m/prometheus"
 	rdb "example.com/m/redis"
+	server "example.com/m/server"
 	tracing "example.com/m/tracing"
 	ws "example.com/m/websocket"
 )
@@ -29,6 +30,8 @@ func main() {
 		"prometheusApiApplication": flag.Bool("prometheusApiApplication", false, "Enable prometheus api application"),
 		"redisbase":                flag.Bool("redisbase", false, "Enable redis base"),
 		"redisTransferMoney":       flag.Bool("redisTransferMoney", false, "Enable redis transfer money"),
+		"wsServer":                 flag.Bool("wsServer", false, "Enable websocket server"),
+		"httpServer":               flag.Bool("httpServer", false, "Enable http server"),
 		"chatServer":               flag.Bool("chatServer", false, "Enable chat server"),
 		"help":                     flag.Bool("help", false, "Display help information"),
 	}
@@ -86,6 +89,10 @@ func main() {
 		rdb.RedisBase()
 	case *flags["redisTransferMoney"]:
 		rdb.RedisTransferMoney()
+	case *flags["httpServer"]:
+		server.HttpServer()
+	case *flags["wsServer"]:
+		server.WebsocketServer()
 	case *flags["chatServer"]:
 		chat.ChatServer()
 	default:
@@ -97,20 +104,21 @@ func main() {
 // displayHelp prints the help information for available flags
 func displayHelp() {
 	fmt.Println("Available options:")
-	fmt.Println("  -websocketServer   		  Enable websocket server to use 8080 port disable monitor")
-	fmt.Println("  -websocketServerMonitor    Enable websocket server to use 8080 port enable monitor")
-	fmt.Println("  -websocketClients  		  Used to brute force test websocket server")
-	fmt.Println("  -websocketClient  		  Test connection to websocket server and send messages")
-	fmt.Println("  -monitor          		  Enable websocket server monitoring")
-	fmt.Println("  -goroutine        		  Enable goroutine base")
-	fmt.Println("  -goroutineMutex   		  Enable goroutine mutex")
-	fmt.Println("  -goroutineChannel 		  Enable goroutine channel")
-	fmt.Println("  -tracingJeager             Enable tracing jeager to use 16686 port")
-	fmt.Println("  -tracingZipkin             Enable tracing zipkin to use 9412 port")
-	fmt.Println("  -prometheus                Enable prometheus base to use 8080 & 9090 port")
-	fmt.Println("  -prometheusApiApplication  Enable prometheus api application to use 8080 & 9090 port")
-	fmt.Println("  -redisbase  				  Enable redis base to use 5432 & 6379 port")
-	fmt.Println("  -redisTransferMoney  	  Enable redis transfer money to use 5432 & 6379 port")
-	fmt.Println("  -chatServer  	 	  	  Enable chat server to use 5432 & 6379 & 3000 port")
+	fmt.Println("  -websocketServer   		  This code implements a Go language WebSocket server using the Gorilla WebSocket library, which can handle multiple client connections, message broadcasting, and system resource monitoring.")
+	fmt.Println("  -websocketServerMonitor    This code implements a Go language WebSocket server using the Gorilla WebSocket library, which can handle multiple client connections, message broadcasting, and system resource monitoring.")
+	fmt.Println("  -websocketClients  		  This program implements a WebSocket client simulation where multiple clients connect to a server, send random messages, and periodically send heartbeat messages to maintain the connection, while ensuring thread-safe operations with mutexes.")
+	fmt.Println("  -websocketClient  		  This program implements a WebSocket client that connects to a server, receives messages asynchronously, and sends periodic messages for a limited duration before gracefully closing the connection.")
+	fmt.Println("  -goroutine        		  This program simulates multiple customers attempting to purchase a product concurrently, using atomic operations to safely manage the stock level in a thread-safe manner.")
+	fmt.Println("  -goroutineMutex   		  This program simulates a bank account with concurrent deposit and withdrawal operations, using a mutex to ensure thread-safe access to the account balance.")
+	fmt.Println("  -goroutineChannel 		  This program implements a producer-consumer model in Go, where producers generate prioritized tasks and a consumer processes them concurrently.")
+	fmt.Println("  -tracingJeager             This is a Go program that initializes a Jaeger tracer using OpenTelemetry, creating trace spans for multiple operations and recording their execution status and errors.")
+	fmt.Println("  -tracingZipkin             This is a Go program that uses OpenTelemetry to initialize the Zipkin tracker and create tracking spans when the operation is executed multiple times to record the execution of the operation and its errors.")
+	fmt.Println("  -prometheus                This is a simple Go program that starts an HTTP server, provides a web UI for Prometheus metrics, and handles requests on the root route, logging the request count and duration.")
+	fmt.Println("  -prometheusApiApplication  This is a Go program that provides Prometheus monitoring API applications, supports HTTP request processing, resource query, user login, and health check, and has the function of gracefully shutting down services.")
+	fmt.Println("  -redisbase  				  This is a Go program used to record user access. It stores access logs through PostgreSQL and uses Redis to cache the user's last access time to improve query efficiency.")
+	fmt.Println("  -redisTransferMoney  	  This is a Use Redis distributed locks to securely transfer funds and query and update user balances via PostgreSQL while subscribing to Redis expiration events to manage sessions and user activity.")
+	fmt.Println("  -wsServer  	 	  	  	  This is an implementation of a WebSocket server that upgrades HTTP connections and handles messages sent by the client and passes received messages back to the client.")
+	fmt.Println("  -httpServer  	 	  	  This is an implements a simple HTTP server that handles different request methods and prints the request details to the console.")
+	fmt.Println("  -chatServer  	 	  	  This is a chat server implemented in Go and Gin, supporting user registration, login, real-time chat and WebSocket connections, and integrating Redis and PostgreSQL management data.")
 	fmt.Println("  -help              		  Display help information")
 }

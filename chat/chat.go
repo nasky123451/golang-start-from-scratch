@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,22 +9,21 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin" // Redis 客戶端
+	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
+
+	"example.com/m/chat/config"
+	"example.com/m/chat/handlers"
+	"example.com/m/chat/metrics"
+	"example.com/m/chat/utils"
 )
 
 type Claims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
-}
-
-type Message struct {
-	Room    string    `json:"room"`
-	From    string    `json:"from"`
-	Content string    `json:"content"`
-	Time    time.Time `json:"time"`
 }
 
 type User struct {
@@ -36,14 +34,17 @@ type User struct {
 func initChat() {
 	var err error
 	// 初始化 Redis 客戶端
-	redisClient, err = initRedis()
+	redisClient, err = config.InitRedis()
 
 	// 初始化 PostgreSQL
-	pgConn, err = initDB()
+	pgConn, err = config.InitDB()
 
-	if err := checkAndCreateTableChat(pgConn); err != nil {
+	if err := config.CheckAndCreateTableChat(pgConn); err != nil {
 		log.Fatalf("Error checking/creating chat table: %v", err)
 	}
+
+	// 初始化 Prometheus 监控
+	metrics.InitMetrics()
 
 	// 註冊 Prometheus 指標
 	prometheus.MustRegister(registerUserCounter)
@@ -88,23 +89,33 @@ func ChatServer() {
 		c.Status(http.StatusNoContent)
 	})
 
-	// Prometheus 指标
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	r.OPTIONS("/latest-chat-date", func(c *gin.Context) {
+		c.Status(http.StatusNoContent)
+	})
 
+	// 路由设置
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.POST("/register", registerUser)
 	r.POST("/login", loginUser)
-	r.GET("/online-users", getOnlineUsers)
-	r.GET("/chat-history", getChatHistory)
-	r.GET("/ws", handleWebSocket) // WebSocket 处理路由
+	r.POST("/logout", logoutUser)
 
-	// JWT 认证中间件
-	r.Use(middlewareJWT())
+	r.GET("/ws", handleWebSocket)
+
+	// 使用 JWT 中间件保护以下路由
+	protected := r.Group("/")
+	protected.Use(middlewareJWT())
+	{
+		protected.GET("/online-users", getOnlineUsers)
+		protected.GET("/chat-history", getChatHistory)
+		protected.GET("/latest-chat-date", getLatestChatDate)
+	}
 
 	r.Run(":8080")
 }
 
 // 处理 WebSocket 连接时更新在线用户状态
 func handleWebSocket(c *gin.Context) {
+
 	// 升级 HTTP 连接到 WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -148,7 +159,7 @@ func handleWebSocket(c *gin.Context) {
 		// 处理聊天消息
 		if msg["type"] == "message" {
 			room := msg["room"]
-			from := msg["from"]
+			sender := msg["sender"]
 			content := msg["content"]
 			timeStr := msg["time"]
 
@@ -158,9 +169,9 @@ func handleWebSocket(c *gin.Context) {
 				continue
 			}
 
-			message := Message{
+			message := config.ChatMessage{
 				Room:    room,
-				From:    from,
+				Sender:  sender,
 				Content: content,
 				Time:    msgTime,
 			}
@@ -171,6 +182,21 @@ func handleWebSocket(c *gin.Context) {
 			}
 
 			broadcastMessageToRoom(room, message)
+		}
+
+		// 处理登出消息
+		if msg["type"] == "logout" {
+			username := clients[conn]
+			log.Printf("User %s logging out", username)
+
+			// 更新用户在线状态到 Redis
+			if err := updateUserOnlineStatus(username, false); err != nil {
+				log.Println("Error updating online status in Redis:", err)
+			}
+
+			// 广播用户下线消息
+			broadcastUserStatus(username, false)
+			break // 退出循环以关闭连接
 		}
 	}
 
@@ -188,36 +214,61 @@ func handleWebSocket(c *gin.Context) {
 	broadcastUserStatus(username, false)
 }
 
+func handleWebSocketDisconnect(conn *websocket.Conn, username string) {
+	defer conn.Close()
+
+	// 更新用户在线状态
+	if err := updateUserOnlineStatus(username, false); err != nil {
+		logger.Error("Error updating online status in Redis:", err)
+	}
+
+	// 保存断开连接时间
+	if err := saveUserDisconnectTime(username); err != nil {
+		logger.Error("Error saving disconnect time:", err)
+	}
+
+	// 广播用户状态
+	broadcastUserStatus(username, false)
+}
+
+func saveUserDisconnectTime(username string) error {
+	// 将用户断开时间记录到 PostgreSQL 中
+	_, err := pgConn.Exec(ctx, "UPDATE users SET disconnect_time = $1 WHERE username = $2", time.Now(), username)
+	return err
+}
+
 // 使用 Redis 存储和获取在线用户
 func updateUserOnlineStatus(username string, online bool) error {
 	if online {
 		// 用户上线，设置键值对并设置过期时间为 1 小时
-		return SetKey(redisClient, ctx, username, "online", time.Hour)
+		return utils.SetKey(redisClient, ctx, username, "online", time.Hour)
 	} else {
 		// 用户下线，删除键
-		return DeleteKey(redisClient, ctx, username)
+		return utils.DeleteKey(redisClient, ctx, username)
 	}
 }
 
-func saveMessageToDB(message Message) error {
+func saveMessageToDB(message config.ChatMessage) error {
 	_, err := pgConn.Exec(ctx, "INSERT INTO chat_messages (room, sender, content, time) VALUES ($1, $2, $3, $4)",
-		message.Room, message.From, message.Content, message.Time)
+		message.Room, message.Sender, message.Content, message.Time)
 	return err
 }
 
-func broadcastMessageToRoom(room string, message Message) {
+func broadcastMessageToRoom(room string, message config.ChatMessage) {
 	for client, _ := range clients {
 		err := client.WriteJSON(gin.H{
 			"type":    "message",
 			"room":    message.Room,
-			"from":    message.From,
+			"sender":  message.Sender,
 			"content": message.Content,
 			"time":    message.Time,
 		})
 		if err != nil {
-			log.Println("Error broadcasting message:", err)
-			client.Close() // 如果广播失败则关闭连接
+			logger.Error("Error broadcasting message:", err)
+			client.Close()
 			delete(clients, client)
+		} else {
+			metrics.MessageSendCounter.Inc() // 增加消息发送计数
 		}
 	}
 }
@@ -294,10 +345,10 @@ func getChatHistory(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var messages []Message
+	var messages []config.ChatMessage
 	for rows.Next() {
-		var msg Message
-		if err := rows.Scan(&msg.From, &msg.Content, &msg.Time); err != nil {
+		var msg config.ChatMessage
+		if err := rows.Scan(&msg.Sender, &msg.Content, &msg.Time); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning message"})
 			return
 		}
@@ -307,12 +358,98 @@ func getChatHistory(c *gin.Context) {
 
 	// 如果没有找到消息，则返回一个状态和消息
 	if len(messages) == 0 {
-		c.JSON(http.StatusOK, gin.H{"messages": []Message{}, "status": "No messages found for the selected date."})
+		c.JSON(http.StatusOK, gin.H{"messages": []config.ChatMessage{}, "status": "No messages found for the selected date."})
 		return
 	}
 
 	// 返回找到的消息
 	c.JSON(http.StatusOK, gin.H{"messages": messages, "status": "Success"})
+}
+
+func getLatestChatDate(c *gin.Context) {
+	room := c.Query("room") // 获取前端传来的房间参数
+	var messages []config.ChatMessage
+	var earliestDate time.Time
+
+	// 获取当前时间
+	currentDate := time.Now()
+
+	// 查询数据库中最早的聊天记录日期
+	err := pgConn.QueryRow(ctx, "SELECT MIN(time) FROM chat_messages WHERE room = $1", room).Scan(&earliestDate)
+	if err != nil {
+		logger.Error("Error fetching earliest chat date:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching earliest chat date"})
+		return
+	}
+
+	// 向后推一天以保证比较的完整性
+	earliestDate = earliestDate.Truncate(24 * time.Hour)
+
+	// 如果没有记录，直接返回没有更多资料
+	if earliestDate.IsZero() {
+		c.JSON(http.StatusOK, gin.H{
+			"latestChatDate": "",
+			"totalMessages":  "",
+			"message":        "沒有更多資料",
+		})
+		return
+	}
+
+	for {
+		// 查询指定日期和房间的聊天记录
+		rows, err := pgConn.Query(ctx, `
+			SELECT * 
+			FROM chat_messages 
+			WHERE DATE(time) = $1 AND room = $2 
+			ORDER BY time ASC
+		`, currentDate.Format("2006-01-02"), room)
+		if err != nil {
+			logger.Error("Error fetching chat messages for date:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching chat messages"})
+			return
+		}
+		defer rows.Close()
+
+		// 将查询到的消息存入切片
+		var dailyMessages []config.ChatMessage
+		for rows.Next() {
+			var message config.ChatMessage
+			if err := rows.Scan(&message.ID, &message.Room, &message.Sender, &message.Content, &message.Time); err != nil { // 根据你的结构体字段调整
+				logger.Error("Error scanning message:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning message"})
+				return
+			}
+			dailyMessages = append(dailyMessages, message)
+		}
+
+		// 将每日的消息添加到总消息列表中
+		messages = append(dailyMessages, messages...)
+
+		// 如果当前日期的消息数量达到20，则停止
+		if len(messages) >= 20 {
+			break
+		}
+
+		// 向前推一天
+		currentDate = currentDate.AddDate(0, 0, -1)
+
+		// 如果已经到达最早的日期，返回没有更多资料
+		if currentDate.Before(earliestDate) {
+			c.JSON(http.StatusOK, gin.H{
+				"latestChatDate": currentDate.Format(time.RFC3339),
+				"totalMessages":  messages,
+				"message":        "沒有更多資料",
+			})
+			return
+		}
+	}
+
+	// 返回最新日期和消息总数
+	c.JSON(http.StatusOK, gin.H{
+		"latestChatDate": currentDate.Format(time.RFC3339),
+		"totalMessages":  messages,
+		"message":        "資料讀取完畢",
+	})
 }
 
 func registerUser(c *gin.Context) {
@@ -392,6 +529,32 @@ func loginUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token}) // 返回 token 给前端
 }
 
+func logoutUser(c *gin.Context) {
+	// 从请求的 JWT 中提取用户信息
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	claims, err := ParseToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	username := claims.Username
+
+	// 更新用户在线状态到 Redis
+	if err := updateUserOnlineStatus(username, false); err != nil {
+		log.Println("Error updating online status in Redis:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not update status"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
 // 生成 JWT token 的函数
 func generateJWT(username string) (string, error) {
 	claims := Claims{
@@ -420,28 +583,34 @@ func ParseToken(tokenString string) (*Claims, error) {
 
 func middlewareJWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
-			c.Abort()
+		// 获取 Authorization 头部
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			handlers.RespondWithError(c, http.StatusUnauthorized, "Authorization header is required")
+			c.Abort() // 终止处理
 			return
 		}
 
-		// 解析和验证 token
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// 检查 token 签名方法是否正确
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			// 返回验证签名所需的密钥
-			return []byte("your-secret-key"), nil
-		})
-
-		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
+		// 检查 Bearer 令牌格式
+		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+			handlers.RespondWithError(c, http.StatusUnauthorized, "Invalid authorization format")
+			c.Abort() // 终止处理
 			return
 		}
+
+		// 提取令牌
+		tokenString := authHeader[7:] // 去掉 "Bearer " 前缀
+
+		// 解析和验证令牌
+		claims, err := ParseToken(tokenString)
+		if err != nil {
+			handlers.RespondWithError(c, http.StatusUnauthorized, "Invalid token")
+			c.Abort() // 终止处理
+			return
+		}
+
+		// 将解析后的用户信息添加到上下文中
+		c.Set("username", claims.Username)
 
 		// 继续处理请求
 		c.Next()

@@ -11,6 +11,7 @@ This project is a large collection of developers' test applications for various 
     - [Tracing](#Tracing)
     - [Prometheus](#Prometheus)
     - [Redis](#Redis)
+    - [ChatAPP](#ChatAPP)
   - [指令](#指令)
     - [Git](#Git)
     - [Docker](#Docker)
@@ -287,7 +288,21 @@ docker stop postgres-container
 
 ### Redis
 
-Under development
+  - Redis Base: User Access Logging with PostgreSQL
+    - Purpose: Manages user access logs by integrating Redis for caching and PostgreSQL for persistent storage.
+    - Key Features:
+      - Logs user access time into PostgreSQL and caches the latest access time in Redis.
+      - Retrieves the last access time of a user from Redis.
+      - Initializes Redis and PostgreSQL connections and ensures necessary tables exist.
+  - Redis Transfer Money: Fund Transfer Management
+    - Purpose: Handles fund transfers between users using Redis for distributed locking and PostgreSQL for transaction consistency.
+    - Key Features:
+      - Utilizes Redis distributed locks to manage concurrent fund transfer operations safely.
+      - Performs database transactions to update user balances and ensure data integrity.
+      - Listens for Redis Pub/Sub messages to handle expiration events, enabling reactive session management.
+      - Simulates user activity to demonstrate session restoration from Redis when data is not found.
+
+These descriptions highlight the primary goals and functionalities of each application, showcasing how they utilize Redis and PostgreSQL in different contexts.
 
 #### Redis Base
 
@@ -320,6 +335,29 @@ go run .\main.go -redisTransferMoney
 docker run -d --rm --name redis-container --network my-network redis:latest
 docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test postgres:latest
 docker run --rm --name go-docker --network my-network -e "DATABASE_URL=postgres-container" -e "REDIS_URL=redis-container" go-docker:latest -redisTransferMoney
+``` 
+
+2. Stop Postgres Server (5432Port & 6379port)  
+
+```   
+docker stop redis-container
+docker stop postgres-container
+``` 
+
+### ChatAPP
+
+Under continuous development
+
+1. Run Postgres Server (5432Port & 6379port)  
+
+```   
+cd chat\chat-app; npm start
+go run .\main.go -chatServer
+
+# Run using docker  
+docker run -d --rm --name redis-container --network my-network redis:latest
+docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test postgres:latest
+docker run --rm --name go-docker --network my-network -e "DATABASE_URL=postgres-container" -e "REDIS_URL=redis-container" go-docker:latest -chatServer
 ``` 
 
 2. Stop Postgres Server (5432Port & 6379port)  

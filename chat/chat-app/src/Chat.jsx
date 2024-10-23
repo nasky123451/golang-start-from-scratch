@@ -14,6 +14,7 @@ import {
   Card,
 } from '@mui/material';
 import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
   const [currentUser, setCurrentUser] = useState('');
@@ -26,32 +27,83 @@ const Chat = () => {
   const messageEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const [noMoreMessages, setNoMoreMessages] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
+  const connectWebSocket = () => {
+    const token = localStorage.getItem('token');
+    const ws = new WebSocket('ws://localhost:8080/ws'); // 替換為你的 WebSocket URL
+
+    ws.onopen = () => {
+      console.log('WebSocket 連線已開啟');
+      ws.send(JSON.stringify({ type: "auth", token }));
+      setWs(ws);
+      setIsConnected(true);
+    };
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type === "message") {
+        setMessages((prevMessages) => [...prevMessages, msg]);
+        if (chatContainerRef.current.scrollHeight - chatContainerRef.current.scrollTop === chatContainerRef.current.clientHeight) {
+          scrollToBottom();
+        }
+      } else if (msg.type === "userStatus") {
+        updateUserStatus(msg.username, msg.status);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket 連線已關閉，嘗試重新連線...');
+      setIsConnected(false);
+      // 嘗試在 2 秒後重新連線
+      setTimeout(connectWebSocket, 2000);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket 發生錯誤', error);
+    };
+
+    setWs(ws);
+  };
+  
+  // 初始数据加载
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setCurrentUser(decoded.username);
-        fetchOnlineUsers();
-        fetchMessages(new Date().toISOString().split('T')[0], "general", false);
-        setupWebSocket(decoded.username);
-      } catch (error) {
-        console.error("Token decoding error:", error);
-      }
+    if (!token) {
+      window.location.href = '/';
     }
 
+    connectWebSocket();
+
+    const loadInitialData = async () => {
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          setCurrentUser(decoded.username);
+          await fetchOnlineUsers();
+  
+          const latestDate = await fetchLatestChatDate('general');
+          if (!latestDate) {
+            setNoMoreMessages(true);
+          }
+        } catch (error) {
+          console.error("Token decoding error:", error);
+        }
+      }
+    };
+  
+    loadInitialData();
+  
     return () => {
       if (ws) {
         ws.close();
+        console.log('WebSocket 連線已關閉');
       }
     };
-  }, []);
+  }, []); // 空依赖数组，确保只在组件首次加载时执行
 
-  useEffect(() => {
-    console.log(messages);
-  }, [messages]);
-
+  // 获取在线用户
   const fetchOnlineUsers = async () => {
     try {
       const response = await fetch('http://localhost:8080/online-users', {
@@ -68,6 +120,60 @@ const Chat = () => {
     }
   };
 
+  // 获取最新的聊天日期
+  const fetchLatestChatDate = async (room) => {
+    if (!room) {
+      console.error('Room parameter is required');
+      return null;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/latest-chat-date?room=${encodeURIComponent(room)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.message === "沒有更多資料") {
+        return null;
+      }
+
+      if (Array.isArray(data.totalMessages)) {
+        if (data.totalMessages.length === 0) {
+          console.warn('No messages found for the selected date.');
+          setNoMoreMessages(true);
+        } else {
+          setNoMoreMessages(false);
+          setMessages((prevMessages) => [...data.totalMessages, ...prevMessages]);
+          setTimeout(() => {
+            chatContainerRef.current.scrollTop += messageEndRef.current.clientHeight;
+          }, 0);
+        }
+      } else {
+        console.error('Messages is not an array or is undefined:', data.totalMessages);
+      }
+
+      return data.latestChatDate;
+    } catch (error) {
+      console.error('Failed to fetch latest chat date:', error);
+      return null;
+    }
+  };
+
+  // 滚动到聊天底部
+  const scrollToBottom = () => {
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // 处理聊天记录获取
   const fetchMessages = async (date, room, separator) => {
     try {
       const response = await fetch(`http://localhost:8080/chat-history?date=${date || new Date().toISOString().split('T')[0]}&room=${room}`, {
@@ -91,32 +197,25 @@ const Chat = () => {
           setNoMoreMessages(false);
 
           if (separator) {
-            // Create date separator message
-            const previousDate = new Date(); // Get current date
-            previousDate.setDate(previousDate.getDate() - 1); // Get the previous day's date
+            const previousDate = new Date();
+            previousDate.setDate(previousDate.getDate() - 1);
 
-            // Add date separator message to message list
             const dateSeparatorMessage = {
-                isSeparator: true,
-                date: previousDate.toISOString(),
+              isSeparator: true,
+              date: previousDate.toISOString(),
             };
 
-            // Merge new messages with previous messages
             setMessages((prevMessages) => [
-                ...data.messages,
-                dateSeparatorMessage,
-                ...prevMessages
+              ...data.messages,
+              dateSeparatorMessage,
+              ...prevMessages,
             ]);
           } else {
-            setMessages((prevMessages) => [
-                ...data.messages,
-                ...prevMessages
-            ]);
+            setMessages((prevMessages) => [...data.messages, ...prevMessages]);
           }
 
-          // Use setTimeout to ensure that the scroll position is checked after the message is loaded
           setTimeout(() => {
-            chatContainerRef.current.scrollTop += messageEndRef.current.clientHeight; // Adjust scroll position
+            chatContainerRef.current.scrollTop += messageEndRef.current.clientHeight;
           }, 0);
         }
       } else {
@@ -127,34 +226,7 @@ const Chat = () => {
     }
   };
 
-  const setupWebSocket = (username) => {
-    const token = localStorage.getItem('token');
-    const socket = new WebSocket(`ws://localhost:8080/ws`);
-
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ type: "auth", token }));
-      setWs(socket);
-    };
-
-    socket.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-
-      if (msg.type === "message") {
-        setMessages((prevMessages) => [...prevMessages, msg]);
-        // Automatically scroll only when at the bottom
-        if (chatContainerRef.current.scrollHeight - chatContainerRef.current.scrollTop === chatContainerRef.current.clientHeight) {
-          scrollToBottom();
-        }
-      } else if (msg.type === "userStatus") {
-        updateUserStatus(msg.username, msg.status);
-      }
-    };
-
-    socket.onclose = () => {
-      console.log('WebSocket connection closed');
-    };
-  };
-
+  // 处理用户状态更新
   const updateUserStatus = (username, status) => {
     if (status === 'online') {
       setOnlineUsers((prev) => [...new Set([...prev, username])]);
@@ -165,6 +237,7 @@ const Chat = () => {
     }
   };
 
+  // 处理消息发送
   const sendMessage = (e) => {
     e.preventDefault();
     if (!messageInput || !ws) return;
@@ -172,7 +245,7 @@ const Chat = () => {
     const message = {
       type: "message",
       room: 'general',
-      from: currentUser,
+      sender: currentUser,
       content: messageInput,
       time: new Date().toISOString(),
     };
@@ -181,42 +254,37 @@ const Chat = () => {
     setMessageInput('');
   };
 
-  const scrollToBottom = () => {
-    if (messageEndRef.current) {
-        messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-};
-
+  // 处理滚动事件，加载更多消息
   const handleScroll = (e) => {
     const { scrollTop } = e.target;
 
     if (scrollTop === 0) {
-      // Save the current number of message lists
       const currentMessagesCount = messages.length;
 
       const lastMessageDate = messages.length > 0 ? new Date(messages[1].time) : null;
-      const previousDate = lastMessageDate ? new Date(lastMessageDate) : new Date();
-      previousDate.setDate(previousDate.getDate() - 1);
-      fetchMessages(previousDate.toISOString().split('T')[0], "general", true);
+      const previousDate = lastMessageDate
+        ? new Date(lastMessageDate.setDate(lastMessageDate.getDate() - 1)).toISOString().split('T')[0]
+        : null;
 
-      // Use setTimeout to ensure that the scroll position is checked after the message is loaded
-      setTimeout(() => {
-        // If the number of new messages loaded does not increase, keep the original scroll position
-        if (messages.length === currentMessagesCount) {
-          chatContainerRef.current.scrollTop = scrollTop; // Restore previous scroll position
-        }
-      }, 100);
+      fetchMessages(previousDate, 'general', true);
     }
   };
 
-  // Make sure to scroll to the bottom when loading
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, []);
+  // 登出功能
+  const logout = () => {
+    if (ws) {
+      ws.send(JSON.stringify({ type: "logout", username: currentUser })); // 发送登出消息
+      ws.close(); // 关闭 WebSocket 连接
+      console.log('User logged out');
+    }
+    // 清理本地存储和其他用户状态
+    localStorage.removeItem('token');
+    setCurrentUser('');
+    setMessages([]);
+    setOnlineUsers([]);
+    setOfflineUsers([]);
+    window.location.href = '/';
+  };
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
@@ -257,15 +325,29 @@ const Chat = () => {
           </List>
         </Box>
       </Drawer>
-
-      {/* main content */}
-      <div style={{ flexGrow: 1, padding: '20px' }}>
+  
+      {/* Main content */}
+      <div style={{ flexGrow: 1, padding: '20px', position: 'relative' }}>
         <IconButton onClick={() => setDrawerOpen(true)}>
           <MenuIcon />
         </IconButton>
-
+  
         <Typography variant="h4" gutterBottom align="center">聊天窗口</Typography>
-
+  
+        {/* Logout Button positioned at the top right */}
+        <Button 
+          variant="contained" 
+          color="secondary" 
+          onClick={logout} 
+          sx={{ 
+            position: 'absolute', 
+            top: 20, 
+            right: 20 
+          }}
+        >
+          登出
+        </Button>
+  
         <Card sx={{ mb: 2, padding: 2 }}>
           <Box 
             ref={chatContainerRef}
@@ -290,8 +372,24 @@ const Chat = () => {
                     {new Date(msg.date).toLocaleDateString()} {/* Show date */}
                   </Typography>
                 ) : (
-                  <Box sx={{ marginBottom: 1 }}>
-                    <strong>{msg.from}:</strong> {msg.content} <em>{new Date(msg.time).toLocaleTimeString()}</em>
+                  <Box sx={{ marginBottom: 2, padding: 1, border: '1px solid #e0e0e0', borderRadius: 2, backgroundColor: '#f9f9f9' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ color: '#3f51b5' }}>{msg.sender}:</strong>
+                      <em style={{ fontSize: '0.8em', color: '#888' }}>
+                        {new Date(msg.time).toLocaleString('zh-CN', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: false,
+                        })}
+                      </em>
+                    </Box>
+                    <Box sx={{ marginTop: 0.5 }}>
+                      {msg.content}
+                    </Box>
                   </Box>
                 )}
               </div>
@@ -299,7 +397,7 @@ const Chat = () => {
             <div ref={messageEndRef} />
           </Box>
         </Card>
-
+  
         <form onSubmit={sendMessage}>
           <TextField 
             value={messageInput}
