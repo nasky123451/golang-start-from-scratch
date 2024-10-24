@@ -32,7 +32,7 @@ func ExpireKey(r *redis.Client, ctx context.Context, key string, expiration time
 	return r.Expire(ctx, key, expiration).Err()
 }
 
-func printRedisKeys(ctx context.Context, r *redis.Client) {
+func PrintRedisKeys(ctx context.Context, r *redis.Client) {
 	keys, err := r.Keys(ctx, "*").Result() // 獲取所有鍵
 	if err != nil {
 		log.Printf("Error fetching keys: %v", err)
@@ -46,5 +46,16 @@ func printRedisKeys(ctx context.Context, r *redis.Client) {
 			continue
 		}
 		log.Printf("Key: %s, Value: %s", key, value)
+	}
+}
+
+// 使用 Redis 存储和获取在线用户
+func UpdateUserOnlineStatus(redisClient *redis.Client, ctx context.Context, username string, online bool) error {
+	if online {
+		// 用户上线，设置键值对并设置过期时间为 1 小时
+		return SetKey(redisClient, ctx, username, "online", time.Hour)
+	} else {
+		// 用户下线，删除键
+		return DeleteKey(redisClient, ctx, username)
 	}
 }

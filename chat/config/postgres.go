@@ -10,11 +10,11 @@ import (
 )
 
 type ChatMessage struct {
-	ID      int       `json:"id"`      // 消息 ID
-	Room    string    `json:"room"`    // 房间名称
-	Sender  string    `json:"sender"`  // 发送者名称
-	Content string    `json:"content"` // 消息内容
-	Time    time.Time `json:"time"`    // 消息发送时间
+	ID      int       `json:"id"`      // Message ID
+	Room    string    `json:"room"`    // Room name
+	Sender  string    `json:"sender"`  // Sender name
+	Content string    `json:"content"` // Message content
+	Time    time.Time `json:"time"`    // Message sending time
 }
 
 func InitDB() (*pgxpool.Pool, error) {
