@@ -60,7 +60,10 @@ func CheckAndCreateTableChat(db *pgxpool.Pool) error {
 		CREATE TABLE users (
 		id SERIAL PRIMARY KEY,
 		username VARCHAR(50) UNIQUE NOT NULL,
-		password VARCHAR(255) NOT NULL
+		password VARCHAR(255) NOT NULL,
+		phone VARCHAR(20),
+		email VARCHAR(100),
+		time TIMESTAMPTZ DEFAULT NOW()
 	);`
 	if err := checkAndCreateTable(db, "users", chatTableSQL); err != nil {
 		return err

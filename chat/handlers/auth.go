@@ -1,6 +1,12 @@
 package handlers
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -13,37 +19,110 @@ import (
 	"example.com/m/chat/utils"
 )
 
-var jwtKey = []byte("secret_key")
+var jwtKey = []byte("secret-key")
 
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
 }
 
-// 注册用户
+// DecryptData decrypts the given encrypted data using AES.
+// 解密函数
+func decryptData(encryptedData string, ivHex string, secretKey string) ([]byte, error) {
+	// 解码 IV
+	iv, err := hex.DecodeString(ivHex)
+	if err != nil {
+		return nil, err
+	}
+
+	// 解码加密数据
+	ciphertext, err := base64.StdEncoding.DecodeString(encryptedData)
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建 AES 区块
+	block, err := aes.NewCipher([]byte(secretKey))
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建 CBC 解密器
+	mode := cipher.NewCBCDecrypter(block, iv)
+	decrypted := make([]byte, len(ciphertext))
+	mode.CryptBlocks(decrypted, ciphertext)
+
+	// 去除填充
+	decrypted = unpad(decrypted)
+
+	return decrypted, nil
+}
+
+// 去除填充
+func unpad(src []byte) []byte {
+	length := len(src)
+	unpadding := int(src[length-1])
+	return src[:(length - unpadding)]
+}
+
+// RegisterUser handles user registration.
 func RegisterUser(c *gin.Context) {
-
-	if config.PgConn == nil {
-		config.Logger.Error("PostgreSQL connection is not initialized")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection is not available"})
-		return
-	}
-	if config.Ctx == nil {
-		config.Logger.Error("Context is not initialized")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Context is not available"})
-		return
-	}
-
-	var user User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var requestData map[string]string
+	if err := c.ShouldBindJSON(&requestData); err != nil {
 		config.Logger.WithFields(logrus.Fields{
-			"username": user.Username,
-			"error":    err.Error(),
-		}).Error("Registration failed")
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			"error": err.Error(),
+		}).Error("Invalid input")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
+	fmt.Println(requestData["EncryptedData"])
+
+	// Decrypt the encrypted data
+	secretKey := "your-secret-key1"
+
+	decryptedData, err := decryptData(requestData["EncryptedData"], requestData["IV"], secretKey)
+	if err != nil {
+		config.Logger.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Decryption failed")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Decryption failed"})
+		return
+	}
+
+	// Parse decrypted data into a User struct
+	var user User
+	err = json.Unmarshal(decryptedData, &user)
+	if err != nil {
+		config.Logger.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to parse user data")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse user data"})
+		return
+	}
+
+	// Check for duplicate username
+	var count int
+	err = config.PgConn.QueryRow(config.Ctx, "SELECT COUNT(*) FROM users WHERE username = $1", user.Username).Scan(&count)
+	if err != nil {
+		config.Logger.WithField("username", user.Username).Error("Error checking username")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking username"})
+		return
+	}
+	if count > 0 {
+		config.Logger.WithField("username", user.Username).Error("Username already exists")
+		c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+		return
+	}
+
+	// Log successful registration
+	config.Logger.WithFields(logrus.Fields{
+		"username": user.Username,
+	}).Info("User registered successfully")
+
+	// Hash the password
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		config.Logger.Error("Error hashing password")
@@ -51,7 +130,8 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	_, err = config.PgConn.Exec(config.Ctx, "INSERT INTO users (username, password) VALUES ($1, $2)", user.Username, hash)
+	// Insert the new user into the database
+	_, err = config.PgConn.Exec(config.Ctx, "INSERT INTO users (username, password, phone, email) VALUES ($1, $2, $3, $4)", user.Username, hash, user.Phone, user.Email)
 	if err != nil {
 		config.Logger.WithField("username", user.Username).Error("Error registering user")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error registering user"})
@@ -78,6 +158,13 @@ func LoginUser(c *gin.Context) {
 		config.Logger.Error("Invalid username or password")
 		config.LoginCounter.WithLabelValues("failure").Inc()
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+		return
+	}
+
+	_, err = config.PgConn.Exec(config.Ctx, "UPDATE users SET time = NOW() WHERE username = $1", user.Username)
+	if err != nil {
+		config.Logger.WithField("error", err.Error()).Error("Failed to update time")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update login time"})
 		return
 	}
 

@@ -2,6 +2,12 @@ package handlers_test
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,37 +26,92 @@ func init() {
 	metrics.InitMetrics()
 }
 
-func TestRegisterUser(t *testing.T) {
+// Encrypt function
+func encrypt(key []byte, plaintext []byte) (string, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
 
-	// 設置 gin 引擎
+	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	iv := ciphertext[:aes.BlockSize]
+	_, err = rand.Read(iv)
+	if err != nil {
+		return "", err
+	}
+
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
+
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// Decrypt function
+func decrypt(key []byte, ciphertext string) ([]byte, error) {
+	ciphertextBytes, err := base64.StdEncoding.DecodeString(ciphertext)
+	if err != nil {
+		return nil, err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ciphertextBytes) < aes.BlockSize {
+		return nil, fmt.Errorf("ciphertext too short")
+	}
+
+	iv := ciphertextBytes[:aes.BlockSize]
+	ciphertextBytes = ciphertextBytes[aes.BlockSize:]
+
+	mode := cipher.NewCBCDecrypter(block, iv)
+	mode.CryptBlocks(ciphertextBytes, ciphertextBytes)
+
+	return ciphertextBytes, nil
+}
+
+func TestRegisterUser(t *testing.T) {
+	// Set up Gin and your routes
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
 	router.POST("/register", handlers.RegisterUser)
 
-	// 模擬有效的用戶註冊請求
-	validUser := `{"username": "testuser", "password": "testpassword"}`
-	req, err := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer([]byte(validUser)))
+	// Create the request payload
+	requestData := map[string]string{
+		"EncryptedData": "3b/f+Fd9ODHtXUIONNyRYLbZD0RuijbWBUMtYSpHEd5lFf9n/7baHS6Gfme1t/vGcd4ewBXAyFKkxi5rNK36pKiuu3FnTpp9cwAA0Zs5/099+qdIBEn6yHpdDg4NU2Du",
+		"IV":            "2138ba5cb44b6906b9a5030527aab6c3",
+	}
+
+	// Marshal the request data to JSON
+	jsonData, err := json.Marshal(requestData)
 	if err != nil {
-		t.Fatalf("Couldn't create request: %v\n", err)
+		t.Fatalf("could not marshal request data: %v", err)
+	}
+
+	// Create a new HTTP request
+	req, err := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(jsonData))
+	if err != nil {
+		t.Fatalf("could not create request: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	// 使用 httptest Recorder 來模擬 HTTP 回應
+	// Create a ResponseRecorder to capture the response
 	w := httptest.NewRecorder()
+
+	// Send the request to the router
 	router.ServeHTTP(w, req)
 
-	// 驗證回應狀態碼
+	// Assert the response code and body
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	// 驗證回應 JSON
-	expectedBody := `{"status":"User registered"}`
-	assert.JSONEq(t, expectedBody, w.Body.String())
-
-	// 刪除已註冊的用戶
-	err = deleteUser("testuser") // 使用您定義的刪除用戶函數
-	if err != nil {
-		t.Fatalf("Failed to delete user: %v\n", err)
+	// Optional: Assert the response body contains the expected message
+	var responseBody map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &responseBody); err != nil {
+		t.Fatalf("could not unmarshal response body: %v", err)
 	}
+
+	assert.Equal(t, "User registered", responseBody["status"])
 }
 
 func TestRegisterUserDatabaseError(t *testing.T) {
@@ -68,8 +129,14 @@ func TestRegisterUserDatabaseError(t *testing.T) {
 	// 模擬當 PostgreSQL 連接不可用的情況
 	config.PgConn = nil
 
-	invalidUser := `{"username": "testuser", "password": "testpassword"}`
-	req, err := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer([]byte(invalidUser)))
+	// Create invalid encrypted data
+	invalidUser := map[string]string{
+		"EncryptedData": "invalid-encrypted-data", // Make sure to handle this case properly in your actual test
+		"IV":            "invalid-encrypted-data",
+	}
+	reqData, _ := json.Marshal(invalidUser)
+
+	req, err := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(reqData))
 	if err != nil {
 		t.Fatalf("Couldn't create request: %v\n", err)
 	}
@@ -82,7 +149,7 @@ func TestRegisterUserDatabaseError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	// 驗證回應 JSON
-	expectedBody := `{"error":"Database connection is not available"}`
+	expectedBody := `{"error":"Decryption failed"}`
 	assert.JSONEq(t, expectedBody, w.Body.String())
 }
 

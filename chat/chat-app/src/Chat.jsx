@@ -106,7 +106,7 @@ const Chat = () => {
   // 获取在线用户
   const fetchOnlineUsers = async () => {
     try {
-      const response = await fetch('http://localhost:8080/online-users', {
+      const response = await fetch('/online-users', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -122,13 +122,16 @@ const Chat = () => {
 
   // 获取最新的聊天日期
   const fetchLatestChatDate = async (room) => {
+    if (noMoreMessages) {
+      return null;
+    }
     if (!room) {
       console.error('Room parameter is required');
       return null;
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/latest-chat-date?room=${encodeURIComponent(room)}`, {
+      const response = await fetch(`/latest-chat-date?room=${encodeURIComponent(room)}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -176,7 +179,7 @@ const Chat = () => {
   // 处理聊天记录获取
   const fetchMessages = async (date, room, separator) => {
     try {
-      const response = await fetch(`http://localhost:8080/chat-history?date=${date || new Date().toISOString().split('T')[0]}&room=${room}`, {
+      const response = await fetch(`/chat-history?date=${date || new Date().toISOString().split('T')[0]}&room=${room}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

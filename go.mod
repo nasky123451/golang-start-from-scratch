@@ -27,7 +27,14 @@ require (
 	golang.org/x/crypto v0.28.0
 )
 
-require github.com/pmezard/go-difflib v1.0.0 // indirect
+require (
+	github.com/gin-contrib/sessions v1.0.1 // indirect
+	github.com/gin-contrib/static v1.1.2 // indirect
+	github.com/gorilla/context v1.1.2 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/gorilla/sessions v1.2.2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+)
 
 require (
 	cloud.google.com/go/auth v0.8.1 // indirect
