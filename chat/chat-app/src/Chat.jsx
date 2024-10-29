@@ -14,7 +14,6 @@ import {
   Card,
 } from '@mui/material';
 import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
   const [currentUser, setCurrentUser] = useState('');

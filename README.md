@@ -8,6 +8,7 @@ This project is a large collection of developers' test applications for various 
   - [單元](#單元)
     - [Goroutine](#Goroutine)
     - [Websocket](#Websocket)
+    - [TCPIP](#TCPIP)
     - [Tracing](#Tracing)
     - [Prometheus](#Prometheus)
     - [Redis](#Redis)
@@ -167,6 +168,51 @@ go run .\main.go -websocketClients
 docker run --rm --name go-docker go-docker:latest -websocketClients
 ``` 
 
+### TCPIP
+
+  - Server: TCP/IP server
+    - Client: Represents each connected TCP client, including connection handling, login, and message communication.
+    - Function:
+      - Uses mutex for safe access to shared resources.
+      - Handles concurrent client connections with goroutines.
+      - Supports commands for login (LOGIN), public message broadcasting (MSG_ALL), and private messaging (MSG_USER).
+  - Client: TCP/IP client
+    - Usage:
+      - Enter your username to login: LOGIN:username
+      - Send broadcast messages: MSG_ALL:Your message
+      - Send private messages: MSG_USER:username:Your message
+      - Exit the client: EXIT
+    - Function:
+      - Connects to the TCP server.
+      - Logs in, sends messages, and receives server responses.
+      - Uses goroutines for receiving messages asynchronously.
+
+These examples highlight how to build a TCP/IP chat server and client in Go, focusing on managing multiple clients, message broadcasting, and private communication.
+
+#### Server (8080 Port)
+
+```   
+go run .\main.go -tcpipServer
+
+# using monitor  
+go run .\main.go -tcpipServerMonitor
+
+# Run using docker  
+docker run --rm --name go-docker go-docker:latest -tcpipServer
+
+# Run using docker and using monitor 
+docker run --rm --name go-docker go-docker:latest -tcpipServerMonitor
+``` 
+
+#### Client
+
+```   
+go run .\main.go -tcpipClient
+
+# Run using docker  
+docker run --rm --name go-docker go-docker:latest -tcpipClient
+``` 
+
 ### Tracing
 
   - Jaeger: Jaeger tracking
@@ -309,12 +355,12 @@ These descriptions highlight the primary goals and functionalities of each appli
 1. Run Postgres Server (5432Port & 6379port)  
 
 ```   
-go run .\main.go -redisbase
+go run .\main.go -redisBase
 
 # Run using docker  
 docker run -d --rm --name redis-container --network my-network redis:latest
 docker run -d --rm --name postgres-container --network my-network -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=henry -e POSTGRES_DB=test postgres:latest
-docker run --rm --name go-docker --network my-network -e "DATABASE_URL=postgres-container" -e "REDIS_URL=redis-container" go-docker:latest -redisbase
+docker run --rm --name go-docker --network my-network -e "DATABASE_URL=postgres-container" -e "REDIS_URL=redis-container" go-docker:latest -redisBase
 ``` 
 
 2. Stop Postgres Server (5432Port & 6379port)  
@@ -351,7 +397,6 @@ Under continuous development
 1. Run Postgres Server (5432Port & 6379port)  
 
 ```   
-cd chat\chat-app; npm start
 go run .\main.go -chatServer
 
 # Run using docker  

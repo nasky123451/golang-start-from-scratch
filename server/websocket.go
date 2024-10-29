@@ -18,7 +18,7 @@ var upgrader = websocket.Upgrader{
 }
 
 // WebSocket handler，處理每個 WebSocket 連接
-func wsHandler(w http.ResponseWriter, r *http.Request) {
+func WsHandler(w http.ResponseWriter, r *http.Request) {
 	// 升級 HTTP 連接到 WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -49,7 +49,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 func WebsocketServer() {
 	// 設置 WebSocket 路由
-	http.HandleFunc("/ws", wsHandler)
+	http.HandleFunc("/ws", WsHandler)
 
 	// 啟動伺服器
 	fmt.Println("WebSocket 伺服器啟動在 :8080")

@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func Handler(w http.ResponseWriter, r *http.Request) {
 	// 打印請求的方法、路徑和頭部訊息
 	fmt.Printf("Received request: %s %s\n", r.Method, r.URL.Path)
 	fmt.Println("Headers:")
@@ -48,7 +48,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func HttpServer() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", Handler)
 
 	port := ":8080" // 設置伺服器端口
 	fmt.Printf("Starting server on port %s\n", port)
