@@ -7,6 +7,8 @@ toolchain go1.23.1
 require (
 	github.com/efficientgo/core v1.0.0-rc.3
 	github.com/efficientgo/e2e v0.14.0
+	github.com/gin-contrib/sessions v1.0.1
+	github.com/gin-contrib/static v1.1.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-kit/kit v0.13.0
 	github.com/go-redis/redis/v8 v8.11.5
@@ -28,11 +30,11 @@ require (
 )
 
 require (
-	github.com/gin-contrib/sessions v1.0.1 // indirect
-	github.com/gin-contrib/static v1.1.2 // indirect
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/gorilla/sessions v1.2.2 // indirect
+	github.com/jupp0r/go-priority-queue v0.0.0-20160601094913-ab1073853bde // indirect
+	github.com/oleiade/lane v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 )
 
